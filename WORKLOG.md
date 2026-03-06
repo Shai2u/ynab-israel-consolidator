@@ -1,0 +1,56 @@
+# Work Log
+
+Session notes for cross-machine and cross-editor continuity.
+
+## Entry Template
+- Date:
+- Time:
+- Timezone:
+- Machine: (mac personal / windows org)
+- Editor: (Cursor / VSCode)
+- Branch:
+- Goal:
+- Tasks completed:
+  - 
+- Decisions:
+  - 
+- Files touched:
+  - 
+- Open issues:
+  - 
+- Next session tasks:
+  - 
+
+---
+
+## 2026-03-05
+- Date: 2026-03-05
+- Time: evening
+- Timezone: local
+- Machine: windows org
+- Editor: Cursor
+- Branch: `main`
+- Goal: define ingestion module direction and operational workflow.
+- Tasks completed:
+  - Configured and verified Git remote usage with SSH alias (`origin`).
+  - Confirmed local `main` matches `origin/main`.
+  - Defined phase-1 ingestion strategy: auto detect source, audit/fix labels, normalize into one table.
+  - Captured initial YNAB-style target columns and field intent.
+  - Added `launch.json` debug template blocks for planned CLI commands.
+  - Added `SCHEMA.md` with v1 consolidated field contract and normalization rules.
+- Decisions:
+  - Keep runtime deterministic (pandas ETL first); agent fallback is optional and controlled.
+  - Keep category fields empty for now in consolidated output.
+  - Use `Memo` for concatenated/conditional extra source data.
+  - Include `Ownership` and `Account` as required columns in normalization.
+- Files touched:
+  - `README.md`
+  - `SCHEMA.md`
+  - `AGENTS.md` (reviewed policy boundaries)
+- Open issues:
+  - No parser code scaffold implemented yet.
+  - No fixtures for Israeli account exports added yet.
+- Next session tasks:
+  - Add initial CLI scaffold (`ingest`, `normalize`, `issues`).
+  - Add detector + label-audit CSV flow.
+  - Add first source parser + tests using sample files.

@@ -66,3 +66,44 @@ Scaffold phase. Core modules, parser registry, matcher, CLI, and tests are next.
 - One real header row per institution/source format
 - Canonical account naming convention
 - Exact YNAB export header row in current usage
+
+## Future Direction (Product + Workflow)
+- Start as a script-first ETL pipeline for speed and control.
+- Auto-identify file source labels (bank/card format) without manual pre-labeling.
+- Produce an audit step where labeling can be reviewed and corrected.
+- After labels are approved, normalize all sources into one long consolidated dataframe.
+- Handle common ETL cases deterministically in pandas first; use agent support only as fallback for persistent anomalies.
+- Reuse the same deterministic core later behind a Django UI.
+- Support date-range filtering in both script mode and future UI mode.
+
+## YNAB-Oriented Consolidated Columns (Current v1 intent)
+- `Ownership`:
+  - Who owns the account/transaction context, e.g. `Shai` or `Shai & Nirit - Joint`.
+- `Account`:
+  - Source account identifier from institution context (bank name or credit card vendor).
+- `Flag`:
+  - Mostly YNAB-native; expected to be empty or default in consolidation v1.
+- `Date`:
+  - Transaction date, normalized from source-specific formats.
+- `Payee`:
+  - Main transaction description/action field.
+- `Category Group/Category`, `Category Group`, `Category`:
+  - Kept empty in v1 external-source consolidation flow.
+- `Memo`:
+  - Extra contextual field built from source data via concatenation/conditional formatting rules.
+- `Outflow` / `Inflow`:
+  - Directional amounts (`Outflow` = money spent, `Inflow` = money received).
+- `Cleared`:
+  - Audit/status field used to evaluate reconciliation quality and registration accuracy.
+
+## Project Operating Docs
+- `WORKLOG.md`:
+  - Session-by-session log (date/time, machine, editor, tasks completed, next tasks).
+  - Append one entry at the end of every working session.
+- `TASKS.md`:
+  - Single source of truth for current TODO, in-progress, and done items.
+  - Keep items short and actionable.
+- `SCHEMA.md`:
+  - Current consolidation schema contract and field-level normalization rules.
+
+These docs are intended to keep work synchronized across machines (macOS/Windows) and editors (Cursor/VSCode).
