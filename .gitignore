@@ -19,6 +19,7 @@ Thumbs.db
 
 # Private financial data (never commit)
 data/
+private_data/
 raw/
 audit/
 processed/

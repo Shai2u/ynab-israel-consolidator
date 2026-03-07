@@ -41,6 +41,8 @@ Session notes for cross-machine and cross-editor continuity.
   - Added S3 sharing setup documentation and sync wrapper scripts for Windows/macOS.
   - Added `.gitignore` policy to block private CSV/XLSX and data folders from Git.
   - Added `.env.example` template and private `.env` keys contract for local machine config.
+  - Added private practice-data convention doc and folder bootstrap scripts.
+  - Added canonical account registry and updated ownership labels to private/joint naming.
 - Decisions:
   - Keep runtime deterministic (pandas ETL first); agent fallback is optional and controlled.
   - Keep category fields empty for now in consolidated output.
@@ -52,8 +54,12 @@ Session notes for cross-machine and cross-editor continuity.
   - `S3_SETUP.md`
   - `.gitignore`
   - `.env.example`
+  - `PRACTICE_DATA.md`
+  - `ACCOUNT_REGISTRY.md`
   - `scripts/s3_sync.ps1`
   - `scripts/s3_sync.sh`
+  - `scripts/init_private_data.ps1`
+  - `scripts/init_private_data.sh`
   - `AGENTS.md` (reviewed policy boundaries)
 - Open issues:
   - No parser code scaffold implemented yet.

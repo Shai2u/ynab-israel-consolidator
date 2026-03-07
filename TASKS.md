@@ -28,3 +28,5 @@ Use this file as the current execution board.
 - Added S3 multi-machine sync setup doc and cross-platform sync scripts.
 - Added `.gitignore` rules to prevent committing private transaction data files.
 - Added `.env.example` and private `.env` contract for S3/AWS local configuration.
+- Added private ETL practice-data convention (`private_data/`) and init scripts.
+- Added canonical account/ownership registry and aligned folder/template labels.

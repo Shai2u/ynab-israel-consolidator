@@ -105,14 +105,18 @@ Scaffold phase. Core modules, parser registry, matcher, CLI, and tests are next.
   - Keep items short and actionable.
 - `SCHEMA.md`:
   - Current consolidation schema contract and field-level normalization rules.
+- `ACCOUNT_REGISTRY.md`:
+  - Canonical bank/card account names and ownership labels for ETL mapping.
 - `S3_SETUP.md`:
   - How to share datasets/artifacts across machines using S3 securely.
+- `PRACTICE_DATA.md`:
+  - How to organize private ETL practice datasets outside Git tracking.
 
 These docs are intended to keep work synchronized across machines (macOS/Windows) and editors (Cursor/VSCode).
 
 ## Data Privacy Rule
 - Private transaction files must not be committed to GitHub.
-- `.gitignore` blocks common financial data paths and file types (`csv`, `xls`, `xlsx`).
+- `.gitignore` blocks common financial data paths and file types (`csv`, `xls`, `xlsx`), including `private_data/`.
 - Use S3 for cross-machine data sharing, and keep code/documentation in Git.
 
 ## Private `.env` Contract

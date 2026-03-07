@@ -12,13 +12,14 @@ This file defines the current target output schema for source-file consolidation
 ### `Ownership`
 - Type: string
 - Required: yes
-- Allowed values (current): `Shai`, `Shai & Nirit - Joint`
+- Allowed values (current): `Shai (Private)`, `Shai & Nirit (Joint)`
 - Meaning: ownership context for account/transaction.
 
 ### `Account`
 - Type: string
 - Required: yes
 - Meaning: account source identifier (bank name or credit-card vendor).
+- Current controlled values are listed in `ACCOUNT_REGISTRY.md`.
 
 ### `Flag`
 - Type: string
