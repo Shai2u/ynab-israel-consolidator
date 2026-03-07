@@ -44,6 +44,8 @@ Session notes for cross-machine and cross-editor continuity.
   - Added private practice-data convention doc and folder bootstrap scripts.
   - Added canonical account registry and updated ownership labels to private/joint naming.
   - Added final date output requirement: `dd/mm/YYYY`.
+  - Added reusable loader for CSV/XLS/XLSX and wired Mizrachi prototype to use it.
+  - Added VSCode/Cursor debug launch config for Mizrachi prototype using root `.env`.
 - Decisions:
   - Keep runtime deterministic (pandas ETL first); agent fallback is optional and controlled.
   - Keep category fields empty for now in consolidated output.
@@ -62,6 +64,10 @@ Session notes for cross-machine and cross-editor continuity.
   - `scripts/s3_sync.sh`
   - `scripts/init_private_data.ps1`
   - `scripts/init_private_data.sh`
+  - `etl_common/file_loader.py`
+  - `etl_common/__init__.py`
+  - `etl_prototypes/bank_mizrachi_proto.py`
+  - `.vscode/launch.json`
   - `AGENTS.md` (reviewed policy boundaries)
 - Open issues:
   - No parser code scaffold implemented yet.

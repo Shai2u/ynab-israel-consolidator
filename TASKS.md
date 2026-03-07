@@ -30,3 +30,5 @@ Use this file as the current execution board.
 - Added `.env.example` and private `.env` contract for S3/AWS local configuration.
 - Added private ETL practice-data convention (`private_data/`) and init scripts.
 - Added canonical account/ownership registry and aligned folder/template labels.
+- Added shared tabular file loader utility for `.csv/.xls/.xlsx` with basic cleanup.
+- Added root-based debug launch config for `etl_prototypes/bank_mizrachi_proto.py`.
