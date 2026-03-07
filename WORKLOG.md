@@ -43,11 +43,13 @@ Session notes for cross-machine and cross-editor continuity.
   - Added `.env.example` template and private `.env` keys contract for local machine config.
   - Added private practice-data convention doc and folder bootstrap scripts.
   - Added canonical account registry and updated ownership labels to private/joint naming.
+  - Added final date output requirement: `dd/mm/YYYY`.
 - Decisions:
   - Keep runtime deterministic (pandas ETL first); agent fallback is optional and controlled.
   - Keep category fields empty for now in consolidated output.
   - Use `Memo` for concatenated/conditional extra source data.
   - Include `Ownership` and `Account` as required columns in normalization.
+  - Final consolidated date output should be `dd/mm/YYYY`.
 - Files touched:
   - `README.md`
   - `SCHEMA.md`

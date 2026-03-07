@@ -78,13 +78,14 @@ Scaffold phase. Core modules, parser registry, matcher, CLI, and tests are next.
 
 ## YNAB-Oriented Consolidated Columns (Current v1 intent)
 - `Ownership`:
-  - Who owns the account/transaction context, e.g. `Shai` or `Shai & Nirit - Joint`.
+  - Who owns the account/transaction context, e.g. `Shai (Private)` or `Shai & Nirit (Joint)`.
 - `Account`:
   - Source account identifier from institution context (bank name or credit card vendor).
 - `Flag`:
   - Mostly YNAB-native; expected to be empty or default in consolidation v1.
 - `Date`:
   - Transaction date, normalized from source-specific formats.
+  - Final output format target: `dd/mm/YYYY` (example: `28/03/2026`).
 - `Payee`:
   - Main transaction description/action field.
 - `Category Group/Category`, `Category Group`, `Category`:

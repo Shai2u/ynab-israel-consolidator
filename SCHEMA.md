@@ -35,6 +35,11 @@ This file defines the current target output schema for source-file consolidation
   - accept mixed formats per source;
   - keep deterministic parsing logic;
   - if parsing fails, record explicit parse issue (no silent drop).
+- Final consolidated output format:
+  - `dd/mm/YYYY` (example: `28/03/2026`).
+- Implementation note:
+  - keep internal parsing as datetime during ETL;
+  - format to `dd/mm/YYYY` at final export/output step.
 
 ### `Payee`
 - Type: string
