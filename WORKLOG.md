@@ -38,6 +38,9 @@ Session notes for cross-machine and cross-editor continuity.
   - Captured initial YNAB-style target columns and field intent.
   - Added `launch.json` debug template blocks for planned CLI commands.
   - Added `SCHEMA.md` with v1 consolidated field contract and normalization rules.
+  - Added S3 sharing setup documentation and sync wrapper scripts for Windows/macOS.
+  - Added `.gitignore` policy to block private CSV/XLSX and data folders from Git.
+  - Added `.env.example` template and private `.env` keys contract for local machine config.
 - Decisions:
   - Keep runtime deterministic (pandas ETL first); agent fallback is optional and controlled.
   - Keep category fields empty for now in consolidated output.
@@ -46,6 +49,11 @@ Session notes for cross-machine and cross-editor continuity.
 - Files touched:
   - `README.md`
   - `SCHEMA.md`
+  - `S3_SETUP.md`
+  - `.gitignore`
+  - `.env.example`
+  - `scripts/s3_sync.ps1`
+  - `scripts/s3_sync.sh`
   - `AGENTS.md` (reviewed policy boundaries)
 - Open issues:
   - No parser code scaffold implemented yet.

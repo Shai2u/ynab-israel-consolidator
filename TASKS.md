@@ -25,3 +25,6 @@ Use this file as the current execution board.
 - Captured v1 schema intent for YNAB-aligned consolidation fields.
 - Added debug `launch.json` template blocks for planned CLIs.
 - Added persistent work logging and task tracking docs (`WORKLOG.md`, `TASKS.md`).
+- Added S3 multi-machine sync setup doc and cross-platform sync scripts.
+- Added `.gitignore` rules to prevent committing private transaction data files.
+- Added `.env.example` and private `.env` contract for S3/AWS local configuration.

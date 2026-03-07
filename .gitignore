@@ -1,0 +1,35 @@
+# Python cache/artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/*.log
+
+# Local environment config (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# Private financial data (never commit)
+data/
+raw/
+audit/
+processed/
+reports/
+*.csv
+*.tsv
+*.xlsx
+*.xls
+
+# Optional: keep sanitized fixtures only (uncomment when needed)
+# !tests/fixtures/
+# !tests/fixtures/**/*.csv
+# !tests/fixtures/**/*.xlsx
+# !tests/fixtures/**/*.xls

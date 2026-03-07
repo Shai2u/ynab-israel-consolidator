@@ -105,5 +105,21 @@ Scaffold phase. Core modules, parser registry, matcher, CLI, and tests are next.
   - Keep items short and actionable.
 - `SCHEMA.md`:
   - Current consolidation schema contract and field-level normalization rules.
+- `S3_SETUP.md`:
+  - How to share datasets/artifacts across machines using S3 securely.
 
 These docs are intended to keep work synchronized across machines (macOS/Windows) and editors (Cursor/VSCode).
+
+## Data Privacy Rule
+- Private transaction files must not be committed to GitHub.
+- `.gitignore` blocks common financial data paths and file types (`csv`, `xls`, `xlsx`).
+- Use S3 for cross-machine data sharing, and keep code/documentation in Git.
+
+## Private `.env` Contract
+Store machine-specific values in `.env` (private, untracked), based on `.env.example`:
+- `YNAB_CONSOLIDATOR_S3_BUCKET` (required)
+- `AWS_PROFILE` (recommended)
+- `AWS_REGION` (optional if profile already defines it)
+- `YNAB_CONSOLIDATOR_S3_PREFIX` (optional; defaults to project data prefix)
+
+Do not store transaction content, exported CSV/XLSX data, or long-lived AWS keys in Git-tracked files.
