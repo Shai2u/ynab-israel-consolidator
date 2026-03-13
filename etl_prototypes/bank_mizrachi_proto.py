@@ -1,6 +1,65 @@
 
 from etl_sources.mizrachi_reader import load_mizrachi_tables
+from etl_sources.constants import YNAB_OUTPUT_DATE_FORMAT
+from etl_sources.mizrachi_constants import (
+    MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP,
+    MIZRACHI_INPUT_DATE_FORMAT,
+)
 import pandas as pd
+
+
+def _dedupe_column_names(names: list[str]) -> list[str]:
+    seen_counts: dict[str, int] = {}
+    deduped: list[str] = []
+
+    for name in names:
+        count = seen_counts.get(name, 0) + 1
+        seen_counts[name] = count
+        deduped.append(name if count == 1 else f"{name}_{count}")
+
+    return deduped
+
+
+def parse_mizrachi_dates(
+    raw_date_col: pd.Series, date_format: str = MIZRACHI_INPUT_DATE_FORMAT
+) -> pd.Series:
+    # Clean raw values
+    s = raw_date_col.astype(str).str.strip()
+    s = s.replace({"": pd.NA, "nan": pd.NA, "None": pd.NA})
+    parsed = pd.to_datetime(s, format=date_format, errors="coerce")
+    # Second pass (only failed rows): dd/mm/yyyy
+    missing = parsed.isna()
+    parsed.loc[missing] = pd.to_datetime(
+        s.loc[missing],
+        format=date_format,
+        errors="coerce",
+    )
+    return parsed
+
+
+def apply_detected_header(df: pd.DataFrame, header_row_idx: int) -> pd.DataFrame:
+    if df.empty:
+        return df.copy()
+
+    if header_row_idx < 0 or header_row_idx >= len(df):
+        raise ValueError(
+            f"Detected header_row_idx {header_row_idx} is out of bounds for dataframe with {len(df)} rows."
+        )
+
+    raw_header = df.iloc[header_row_idx, :]
+    cleaned_header = []
+    for col_idx, value in enumerate(raw_header):
+        if pd.isna(value):
+            cleaned_header.append(f"unnamed_{col_idx}")
+            continue
+
+        header_name = str(value).strip()
+        cleaned_header.append(header_name or f"unnamed_{col_idx}")
+
+    normalized_columns = _dedupe_column_names(cleaned_header)
+    normalized_df = df.iloc[header_row_idx + 1 :].copy().reset_index(drop=True)
+    normalized_df.columns = normalized_columns
+    return normalized_df
 
 
 def detect_header_row_mizrachi_case(
@@ -41,12 +100,34 @@ def main(path_to_folder: str, dates_range: tuple[str, str] | None = None) -> Non
         print(f"Requested date range: {dates_range[0]} -> {dates_range[1]}")
     
 
-    # Header row detection
     # Detect header row in Mizrachi export via NaN-first-row signature.
     header_row_idx = detect_header_row_mizrachi_case(df_pending)
-    df_pending.columns = df_pending.iloc[header_row_idx, :]
-    df_pending = df_pending.iloc[header_row_idx+1:].copy().reset_index(drop=True)
+
+    df_pending = apply_detected_header(df_pending, header_row_idx)
+
+    # find last footer of dataframe  using date column (non date values) or     
+    # dataframe has been aligned to the header row
+
+    # translating columns names using global mapping (for this project)
+    df_pending.columns = df_pending.columns.map(MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP)
     
+    # Align dates to dd/mm/YYYY format + drop rows with invalid dates
+    parsed_dates = parse_mizrachi_dates(df_pending["Date"])
+    # 2) Keep only valid date rows
+    valid_mask = parsed_dates.notna()
+    df_pending = df_pending.loc[valid_mask].copy()
+    # 3) Format to dd/mm/yyyy
+    df_pending["Date"] = parsed_dates.loc[valid_mask].dt.strftime(YNAB_OUTPUT_DATE_FORMAT)
+
+    # Keep only the mapped columns if exist
+    df_pending = df_pending[
+        [
+            column
+            for column in MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP.values()
+            if column in df_pending.columns
+        ]
+    ]
+
 
     #  
 # STEP: parse date
