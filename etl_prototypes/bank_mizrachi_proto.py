@@ -33,7 +33,7 @@ def main(path_to_folder: str, dates_range: tuple[str, str] | None = None) -> Non
     if dates_range:
         print(f"Requested date range: {dates_range[0]} -> {dates_range[1]}")
 
-    df_pending = normalize_mizrachi_table(df_pending)
+    df_pending = normalize_mizrachi_table(df_pending, dates_range=dates_range)
 
     # Prototype next steps:
     # - Split inflow/outflow to YNAB-compatible amount fields.
@@ -41,13 +41,18 @@ def main(path_to_folder: str, dates_range: tuple[str, str] | None = None) -> Non
 
 # Pipeline steps
 # End-to-end normalization story
-def normalize_mizrachi_table(df_pending: pd.DataFrame) -> pd.DataFrame:
+def normalize_mizrachi_table(
+    df_pending: pd.DataFrame, dates_range: tuple[str, str] | None = None
+) -> pd.DataFrame:
     """Normalize one raw Mizrachi dataframe to canonical shape.
 
     Parameters
     ----------
     df_pending : pd.DataFrame
         Raw dataframe as loaded from the Mizrachi source.
+    dates_range : tuple[str, str] | None, optional
+        Optional inclusive date range filter (start_date, end_date) using
+        ``YNAB_OUTPUT_DATE_FORMAT``, by default None.
 
     Returns
     -------
@@ -58,6 +63,7 @@ def normalize_mizrachi_table(df_pending: pd.DataFrame) -> pd.DataFrame:
     normalized_df = apply_header_row(df_pending, header_row_idx)
     normalized_df = translate_mizrachi_columns(normalized_df)
     normalized_df = normalize_ynab_date_column(normalized_df)
+    normalized_df = filter_by_dates_range(normalized_df, dates_range=dates_range)
     normalized_df = select_mapped_output_columns(normalized_df)
     normalized_df = add_mizrachi_account_metadata(normalized_df)
     return normalized_df
@@ -259,6 +265,36 @@ def normalize_ynab_date_column(df: pd.DataFrame) -> pd.DataFrame:
     normalized_df = normalized_df.loc[valid_mask].copy()
     normalized_df["Date"] = parsed_dates.loc[valid_mask].dt.strftime(YNAB_OUTPUT_DATE_FORMAT)
     return normalized_df
+
+
+# Output shaping
+def filter_by_dates_range(
+    df: pd.DataFrame, dates_range: tuple[str, str] | None = None
+) -> pd.DataFrame:
+    """Filter rows by an optional inclusive date range.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe containing a ``Date`` column in ``YNAB_OUTPUT_DATE_FORMAT``.
+    dates_range : tuple[str, str] | None, optional
+        Optional inclusive date range (start_date, end_date), by default None.
+
+    Returns
+    -------
+    pd.DataFrame
+        Filtered dataframe when ``dates_range`` is provided, otherwise unchanged copy.
+    """
+    if dates_range is None:
+        return df.copy()
+
+    start_date_str, end_date_str = dates_range
+    start_date = pd.to_datetime(start_date_str, format=YNAB_OUTPUT_DATE_FORMAT, errors="raise")
+    end_date = pd.to_datetime(end_date_str, format=YNAB_OUTPUT_DATE_FORMAT, errors="raise")
+
+    parsed_dates = pd.to_datetime(df["Date"], format=YNAB_OUTPUT_DATE_FORMAT, errors="coerce")
+    in_range_mask = parsed_dates.between(start_date, end_date, inclusive="both")
+    return df.loc[in_range_mask].copy()
 
 
 # Output shaping
