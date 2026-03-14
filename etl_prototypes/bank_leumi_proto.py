@@ -33,6 +33,8 @@ def main(path_to_folder: str, dates_range: tuple[str, str] | None = None) -> Non
         print(f"Requested date range: {dates_range[0]} -> {dates_range[1]}")
 
     df_pending = normalize_leumi_table(df_pending, dates_range=dates_range)
+    
+    print('in')
 
 def normalize_leumi_table(
     df_pending: pd.DataFrame, dates_range: tuple[str, str] | None = None
@@ -48,14 +50,32 @@ def normalize_leumi_table(
     return normalized_df
 
 
-def detect_leumi_header_row(df: pd.DataFrame) -> int:
-    """TODO: implement Leumi-specific header detection."""
-    raise NotImplementedError("Implement Leumi header row detection.")
+def detect_leumi_header_row(df: pd.DataFrame, default_row_idx: int = 1) -> int:
+    """Detect header row using a Leumi column-signature heuristic with fallback."""
+    required_headers = {"הערה", "בזכות", "בחובה", "אסמכתא", "תאריך"}
+
+    def normalize_cell(value: object) -> str:
+        if pd.isna(value):
+            return ""
+        return str(value).strip()
+
+    start_row = max(default_row_idx, 0)
+    for row_idx in range(start_row, len(df)):
+        row_values = {normalize_cell(value) for value in df.iloc[row_idx].tolist()}
+        if required_headers.issubset(row_values):
+            return row_idx
+
+    return default_row_idx
 
 
 def apply_header_row(df: pd.DataFrame, header_row_idx: int) -> pd.DataFrame:
-    """TODO: apply detected header row and return data rows below it."""
-    raise NotImplementedError("Implement Leumi header application.")
+    """Promote detected header row and return data rows below it."""
+    if not 0 <= header_row_idx < len(df):
+        raise ValueError(f"header_row_idx out of range: {header_row_idx}")
+
+    with_header_df = df.copy()
+    with_header_df.columns = with_header_df.iloc[header_row_idx, :]
+    return with_header_df.iloc[header_row_idx + 1 :].reset_index(drop=True)
 
 
 def translate_leumi_columns(df: pd.DataFrame) -> pd.DataFrame:
