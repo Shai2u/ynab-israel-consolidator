@@ -51,7 +51,7 @@ def normalize_leumi_table(
     normalized_df = normalize_ynab_date_column(normalized_df)
     normalized_df = filter_by_dates_range(normalized_df, date_column="Date", dates_range=dates_range, output_date_format=YNAB_OUTPUT_DATE_FORMAT)
     normalized_df = select_mapped_output_columns(normalized_df)
-    normalized_df = add_leumi_account_metadata(normalized_df)
+    normalized_df = attach_account_metadata(df=normalized_df, account_name=LEUMI_ACCOUNT_NAME)
     return normalized_df
 
 
@@ -118,9 +118,7 @@ def select_mapped_output_columns(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def add_leumi_account_metadata(df: pd.DataFrame) -> pd.DataFrame:
-    """Attach canonical account and ownership columns for Leumi source."""
-    return attach_account_metadata(df=df, account_name=LEUMI_ACCOUNT_NAME)
+
 
 # Entry point
 if __name__ == "__main__":

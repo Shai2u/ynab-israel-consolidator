@@ -39,22 +39,15 @@ def normalize_hapoalim_table(
     """End-to-end Hapoalim normalization story (to be implemented by you)."""
     header_row_idx = detect_header_row_by_required_headers(df_pending, required_headers=HAPOALIM_REQUIRED_HEADERS)
     normalized_df = apply_header_row(df_pending, header_row_idx)
-    normalized_df = translate_hapoalim_columns(normalized_df)
+    normalized_df = translate_columns(df=normalized_df, source_to_canonical_map=HAPOALIM_SOURCE_TO_CANONICAL_COLUMN_MAP)
     normalized_df = normalize_ynab_date_column(normalized_df)
     normalized_df = filter_by_dates_range(normalized_df, date_column="Date", dates_range=dates_range, output_date_format=YNAB_OUTPUT_DATE_FORMAT)
-    normalized_df = select_mapped_output_columns(normalized_df)
-    normalized_df = add_hapoalim_account_metadata(normalized_df)
+    normalized_df = select_mapped_columns(df=normalized_df, source_to_canonical_map=HAPOALIM_SOURCE_TO_CANONICAL_COLUMN_MAP)
+    normalized_df = attach_account_metadata(df=normalized_df, account_name=HAPOALIM_ACCOUNT_NAME)
     return normalized_df
 
 
 
-
-def translate_hapoalim_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """TODO: translate Hapoalim source headers to canonical names."""
-    return translate_columns(
-        df=df,
-        source_to_canonical_map=HAPOALIM_SOURCE_TO_CANONICAL_COLUMN_MAP,
-    )
 
 
 def normalize_ynab_date_column(df: pd.DataFrame) -> pd.DataFrame:
@@ -77,9 +70,7 @@ def select_mapped_output_columns(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def add_hapoalim_account_metadata(df: pd.DataFrame) -> pd.DataFrame:
-    """Attach canonical account and ownership columns for Hapoalim source."""
-    return attach_account_metadata(df=df, account_name=HAPOALIM_ACCOUNT_NAME)
+
 
 
 if __name__ == "__main__":

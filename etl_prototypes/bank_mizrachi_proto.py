@@ -5,7 +5,8 @@ from etl_sources.mizrachi_reader import load_mizrachi_tables
 from etl_sources.account_registry import attach_account_metadata
 from etl_sources.constants import YNAB_OUTPUT_DATE_FORMAT
 from etl_common.column_mapping import select_mapped_columns, translate_columns
-from etl_common.date_utilities import normalize_date_column
+from etl_common.date_utilities import normalize_date_column, filter_by_dates_range
+from etl_common.header_detection import apply_header_row
 from etl_sources.mizrachi_constants import (
     MIZRACHI_ACCOUNT_NAME,
     MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP,
@@ -64,11 +65,11 @@ def normalize_mizrachi_table(
     """
     header_row_idx = detect_mizrachi_header_row(df_pending)
     normalized_df = apply_header_row(df_pending, header_row_idx)
-    normalized_df = translate_mizrachi_columns(normalized_df)
+    normalized_df = translate_columns(df=normalized_df, source_to_canonical_map=MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP)
     normalized_df = normalize_ynab_date_column(normalized_df)
-    normalized_df = filter_by_dates_range(normalized_df, dates_range=dates_range)
-    normalized_df = select_mapped_output_columns(normalized_df)
-    normalized_df = add_mizrachi_account_metadata(normalized_df)
+    normalized_df = filter_by_dates_range(normalized_df, date_column="Date", dates_range=dates_range, output_date_format=YNAB_OUTPUT_DATE_FORMAT)
+    normalized_df = select_mapped_columns(df=normalized_df, source_to_canonical_map=MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP)
+    normalized_df = attach_account_metadata(df=normalized_df, account_name=MIZRACHI_ACCOUNT_NAME)
     return normalized_df
 
 
@@ -133,49 +134,6 @@ def detect_header_row_mizrachi_case(
     return detect_mizrachi_header_row(df, default_row=default_row, probe_rows=probe_rows)
 
 
-# Header application
-def apply_header_row(df: pd.DataFrame, header_row_idx: int) -> pd.DataFrame:
-    """Apply a detected header row and return data rows below it.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Input dataframe containing the header row inside data.
-    header_row_idx : int
-        Row index that should become the dataframe columns.
-
-    Returns
-    -------
-    pd.DataFrame
-        Dataframe with normalized/deduplicated columns and reset index.
-
-    Raises
-    ------
-    ValueError
-        If ``header_row_idx`` is outside dataframe bounds.
-    """
-    if df.empty:
-        return df.copy()
-
-    if header_row_idx < 0 or header_row_idx >= len(df):
-        raise ValueError(
-            f"Detected header_row_idx {header_row_idx} is out of bounds for dataframe with {len(df)} rows."
-        )
-
-    raw_header = df.iloc[header_row_idx, :]
-    cleaned_header = []
-    for col_idx, value in enumerate(raw_header):
-        if pd.isna(value):
-            cleaned_header.append(f"unnamed_{col_idx}")
-            continue
-
-        header_name = str(value).strip()
-        cleaned_header.append(header_name or f"unnamed_{col_idx}")
-
-    normalized_columns = _dedupe_column_names(cleaned_header)
-    normalized_df = df.iloc[header_row_idx + 1 :].copy().reset_index(drop=True)
-    normalized_df.columns = normalized_columns
-    return normalized_df
 
 
 # Backward-compatible alias
@@ -195,26 +153,6 @@ def apply_detected_header(df: pd.DataFrame, header_row_idx: int) -> pd.DataFrame
         Header-normalized dataframe.
     """
     return apply_header_row(df, header_row_idx)
-
-
-# Column translation
-def translate_mizrachi_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Translate Mizrachi Hebrew column names to canonical names.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Dataframe with source column names.
-
-    Returns
-    -------
-    pd.DataFrame
-        Dataframe with translated column names.
-    """
-    return translate_columns(
-        df=df,
-        source_to_canonical_map=MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP,
-    )
 
 
 # Date parsing
@@ -263,6 +201,8 @@ def normalize_ynab_date_column(df: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         Dataframe with valid dates formatted as ``YNAB_OUTPUT_DATE_FORMAT``.
     """
+    if not MIZRACHI_INPUT_DATE_FORMAT:
+        raise NotImplementedError("Set MIZRACHI_INPUT_DATE_FORMAT before date normalization.")
     return normalize_date_column(
         df=df,
         date_column="Date",
@@ -271,71 +211,8 @@ def normalize_ynab_date_column(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-# Output shaping
-def filter_by_dates_range(
-    df: pd.DataFrame, dates_range: tuple[str, str] | None = None
-) -> pd.DataFrame:
-    """Filter rows by an optional inclusive date range.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Dataframe containing a ``Date`` column in ``YNAB_OUTPUT_DATE_FORMAT``.
-    dates_range : tuple[str, str] | None, optional
-        Optional inclusive date range (start_date, end_date), by default None.
-
-    Returns
-    -------
-    pd.DataFrame
-        Filtered dataframe when ``dates_range`` is provided, otherwise unchanged copy.
-    """
-    if dates_range is None:
-        return df.copy()
-
-    start_date_str, end_date_str = dates_range
-    start_date = pd.to_datetime(start_date_str, format=YNAB_OUTPUT_DATE_FORMAT, errors="raise")
-    end_date = pd.to_datetime(end_date_str, format=YNAB_OUTPUT_DATE_FORMAT, errors="raise")
-
-    parsed_dates = pd.to_datetime(df["Date"], format=YNAB_OUTPUT_DATE_FORMAT, errors="coerce")
-    in_range_mask = parsed_dates.between(start_date, end_date, inclusive="both")
-    return df.loc[in_range_mask].copy()
 
 
-# Output shaping
-def select_mapped_output_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Keep only mapped canonical output columns that exist.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Dataframe after normalization steps.
-
-    Returns
-    -------
-    pd.DataFrame
-        Dataframe limited to mapped output columns present in ``df``.
-    """
-    return select_mapped_columns(
-        df=df,
-        source_to_canonical_map=MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP,
-    )
-
-
-# Account metadata
-def add_mizrachi_account_metadata(df: pd.DataFrame) -> pd.DataFrame:
-    """Attach canonical account and ownership columns for Mizrachi source.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Normalized dataframe from Mizrachi pipeline.
-
-    Returns
-    -------
-    pd.DataFrame
-        Dataframe enriched with ``Account`` and ``Ownership``.
-    """
-    return attach_account_metadata(df=df, account_name=MIZRACHI_ACCOUNT_NAME)
 
 # Helpers
 def _dedupe_column_names(names: list[str]) -> list[str]:
