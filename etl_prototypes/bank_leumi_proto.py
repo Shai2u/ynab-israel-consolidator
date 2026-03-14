@@ -10,6 +10,7 @@ from etl_sources.constants import YNAB_OUTPUT_DATE_FORMAT
 from etl_sources.leumi_constants import (
     LEUMI_ACCOUNT_NAME,
     LEUMI_SOURCE_TO_CANONICAL_COLUMN_MAP,
+    LEUMI_INPUT_DATE_FORMAT,
 )
 
 
@@ -79,17 +80,20 @@ def apply_header_row(df: pd.DataFrame, header_row_idx: int) -> pd.DataFrame:
 
 
 def translate_leumi_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """TODO: translate Leumi source headers to canonical names."""
+    """Translate Leumi source headers to canonical names."""
     translated_df = df.copy()
     translated_df.columns = translated_df.columns.map(LEUMI_SOURCE_TO_CANONICAL_COLUMN_MAP)
     return translated_df
 
 
 def normalize_ynab_date_column(df: pd.DataFrame) -> pd.DataFrame:
-    """TODO: parse and normalize Leumi date column to YNAB format."""
-    raise NotImplementedError(
-        f"Implement Leumi date normalization to {YNAB_OUTPUT_DATE_FORMAT}."
-    )
+    """Parse and normalize Leumi date column to YNAB format."""
+    normalized_df = df.copy()
+    parsed_dates = pd.to_datetime(normalized_df["Date"], format=LEUMI_INPUT_DATE_FORMAT, errors="coerce")
+    valid_mask = parsed_dates.notna()
+    normalized_df = normalized_df.loc[valid_mask].copy()
+    normalized_df["Date"] = parsed_dates.loc[valid_mask].dt.strftime(YNAB_OUTPUT_DATE_FORMAT)
+    return normalized_df
 
 
 def filter_by_dates_range(
