@@ -102,6 +102,6 @@ def add_leumi_account_metadata(df: pd.DataFrame) -> pd.DataFrame:
 
 # Entry point
 if __name__ == "__main__":
-    path_to_folder = r'C:\Users\shai\Documents\personal\personal_projects\ynab-israel-consolidator\private_data\incoming\bank_mizrachi'
+    path_to_folder = r'C:\Users\shai\Documents\personal\personal_projects\ynab-israel-consolidator\private_data\incoming\bank_leumi'
     dates_range = ("01/01/2026", "01/03/2026")
     main(path_to_folder=path_to_folder, dates_range=dates_range)
