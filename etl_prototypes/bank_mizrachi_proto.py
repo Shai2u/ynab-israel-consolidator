@@ -2,8 +2,10 @@
 
 # Imports
 from etl_sources.mizrachi_reader import load_mizrachi_tables
+from etl_sources.account_registry import attach_account_metadata
 from etl_sources.constants import YNAB_OUTPUT_DATE_FORMAT
 from etl_sources.mizrachi_constants import (
+    MIZRACHI_ACCOUNT_NAME,
     MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP,
     MIZRACHI_INPUT_DATE_FORMAT,
 )
@@ -57,6 +59,7 @@ def normalize_mizrachi_table(df_pending: pd.DataFrame) -> pd.DataFrame:
     normalized_df = translate_mizrachi_columns(normalized_df)
     normalized_df = normalize_ynab_date_column(normalized_df)
     normalized_df = select_mapped_output_columns(normalized_df)
+    normalized_df = add_mizrachi_account_metadata(normalized_df)
     return normalized_df
 
 
@@ -278,6 +281,23 @@ def select_mapped_output_columns(df: pd.DataFrame) -> pd.DataFrame:
         if column in df.columns
     ]
     return df[keep_columns]
+
+
+# Account metadata
+def add_mizrachi_account_metadata(df: pd.DataFrame) -> pd.DataFrame:
+    """Attach canonical account and ownership columns for Mizrachi source.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Normalized dataframe from Mizrachi pipeline.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe enriched with ``Account`` and ``Ownership``.
+    """
+    return attach_account_metadata(df=df, account_name=MIZRACHI_ACCOUNT_NAME)
 
 # Helpers
 def _dedupe_column_names(names: list[str]) -> list[str]:

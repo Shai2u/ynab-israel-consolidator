@@ -1,5 +1,8 @@
 """Mizrachi-specific parsing and mapping constants."""
 
+# Canonical account name in ACCOUNT_REGISTRY.md.
+MIZRACHI_ACCOUNT_NAME = "Mizrachi"
+
 # Accepted input date formats from Mizrachi exports.
 # Keep ordered from most common to less common for predictable parsing.
 MIZRACHI_INPUT_DATE_FORMAT = "%d/%m/%y"
