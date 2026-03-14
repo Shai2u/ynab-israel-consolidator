@@ -26,6 +26,19 @@
       },
       "console": "integratedTerminal",
       "justMyCode": true
+    },
+    {
+      "name": "Debug: bank_hapoalim_proto",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/etl_prototypes/bank_hapoalim_proto.py",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": true
     }
   ]
 }
