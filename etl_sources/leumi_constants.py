@@ -6,6 +6,8 @@ LEUMI_ACCOUNT_NAME = "Bank Leumi"
 # Confirmed Leumi export date format (dd/mm/YYYY).
 LEUMI_INPUT_DATE_FORMAT = "%d/%m/%Y"
 
+LEUMI_REQUIRED_HEADERS = {"הערה", "בזכות", "בחובה", "אסמכתא", "תאריך"}
+
 # Fill this with Leumi Hebrew/source header mappings once discovered.
 LEUMI_SOURCE_TO_CANONICAL_COLUMN_MAP: dict[str, str] = {    
     "תאריך": "Date",

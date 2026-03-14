@@ -25,13 +25,15 @@ def read_hapoalim_file(path: str | Path) -> pd.DataFrame:
     (for example, ``tables[?]``) once real Hapoalim samples are inspected.
     """
     file_path = Path(path)
-    tables = pd.read_excel(file_path)
+    if not file_path.exists():
+        raise FileNotFoundError(f"Hapoalim source file does not exist: {file_path}")
 
-    if not tables:
-        raise ValueError(f"Hapoalim rule expected at least one HTML table in {file_path.name}")
+    table = pd.read_excel(file_path)
+    if table.empty:
+        raise ValueError(f"Hapoalim source file is empty: {file_path.name}")
 
     # TODO: choose the correct table index based on real exports.
-    df = tables[0].copy()
+    df = table.copy()
     df.columns = [str(c).strip() for c in df.columns]
     df = df.dropna(how="all")
     df = df.dropna(axis=1, how="all")
@@ -40,5 +42,5 @@ def read_hapoalim_file(path: str | Path) -> pd.DataFrame:
     df["__source_file"] = file_path.name
     df["__source_path"] = str(file_path)
     df["__source_ext"] = file_path.suffix.lower()
-    df["__source_rule"] = "hapoalim_read_html_table_0"
+    df["__source_rule"] = "hapoalim_read_excel"
     return df

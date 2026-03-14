@@ -4,14 +4,18 @@ from __future__ import annotations
 
 import pandas as pd
 
+from etl_common.column_mapping import translate_columns
+from etl_common.date_normalization import normalize_date_column
 from etl_sources.account_registry import attach_account_metadata
 from etl_sources.constants import YNAB_OUTPUT_DATE_FORMAT
 from etl_sources.hapoalim_constants import (
     HAPOALIM_ACCOUNT_NAME,
     HAPOALIM_INPUT_DATE_FORMAT,
     HAPOALIM_SOURCE_TO_CANONICAL_COLUMN_MAP,
+    HAPOALIM_REQUIRED_HEADERS,
 )
 from etl_sources.hapoalim_reader import load_hapoalim_tables
+from etl_common.header_detection import detect_header_row_by_required_headers, apply_header_row
 
 
 def main(path_to_folder: str, dates_range: tuple[str, str] | None = None) -> None:
@@ -33,7 +37,7 @@ def normalize_hapoalim_table(
     df_pending: pd.DataFrame, dates_range: tuple[str, str] | None = None
 ) -> pd.DataFrame:
     """End-to-end Hapoalim normalization story (to be implemented by you)."""
-    header_row_idx = detect_hapoalim_header_row(df_pending)
+    header_row_idx = detect_header_row_by_required_headers(df_pending, required_headers=HAPOALIM_REQUIRED_HEADERS)
     normalized_df = apply_header_row(df_pending, header_row_idx)
     normalized_df = translate_hapoalim_columns(normalized_df)
     normalized_df = normalize_ynab_date_column(normalized_df)
@@ -43,29 +47,25 @@ def normalize_hapoalim_table(
     return normalized_df
 
 
-def detect_hapoalim_header_row(df: pd.DataFrame) -> int:
-    """TODO: implement Hapoalim-specific header detection."""
-    raise NotImplementedError("Implement Hapoalim header row detection.")
-
-
-def apply_header_row(df: pd.DataFrame, header_row_idx: int) -> pd.DataFrame:
-    """TODO: apply detected header row and return data rows below it."""
-    raise NotImplementedError("Implement Hapoalim header application.")
 
 
 def translate_hapoalim_columns(df: pd.DataFrame) -> pd.DataFrame:
     """TODO: translate Hapoalim source headers to canonical names."""
-    translated_df = df.copy()
-    translated_df.columns = translated_df.columns.map(HAPOALIM_SOURCE_TO_CANONICAL_COLUMN_MAP)
-    return translated_df
+    return translate_columns(
+        df=df,
+        source_to_canonical_map=HAPOALIM_SOURCE_TO_CANONICAL_COLUMN_MAP,
+    )
 
 
 def normalize_ynab_date_column(df: pd.DataFrame) -> pd.DataFrame:
-    """TODO: parse and normalize Hapoalim date column to YNAB format."""
+    """Parse and normalize Hapoalim date column to YNAB format."""
     if not HAPOALIM_INPUT_DATE_FORMAT:
         raise NotImplementedError("Set HAPOALIM_INPUT_DATE_FORMAT before date normalization.")
-    raise NotImplementedError(
-        f"Implement Hapoalim date normalization to {YNAB_OUTPUT_DATE_FORMAT}."
+    return normalize_date_column(
+        df=df,
+        date_column="Date",
+        input_date_format=HAPOALIM_INPUT_DATE_FORMAT,
+        output_date_format=YNAB_OUTPUT_DATE_FORMAT,
     )
 
 

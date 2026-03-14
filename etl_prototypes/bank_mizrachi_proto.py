@@ -4,11 +4,14 @@
 from etl_sources.mizrachi_reader import load_mizrachi_tables
 from etl_sources.account_registry import attach_account_metadata
 from etl_sources.constants import YNAB_OUTPUT_DATE_FORMAT
+from etl_common.column_mapping import translate_columns
+from etl_common.date_normalization import normalize_date_column
 from etl_sources.mizrachi_constants import (
     MIZRACHI_ACCOUNT_NAME,
     MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP,
     MIZRACHI_INPUT_DATE_FORMAT,
 )
+
 import pandas as pd
 
 # Orchestration
@@ -208,9 +211,10 @@ def translate_mizrachi_columns(df: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         Dataframe with translated column names.
     """
-    translated_df = df.copy()
-    translated_df.columns = translated_df.columns.map(MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP)
-    return translated_df
+    return translate_columns(
+        df=df,
+        source_to_canonical_map=MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP,
+    )
 
 
 # Date parsing
@@ -259,12 +263,12 @@ def normalize_ynab_date_column(df: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         Dataframe with valid dates formatted as ``YNAB_OUTPUT_DATE_FORMAT``.
     """
-    normalized_df = df.copy()
-    parsed_dates = parse_mizrachi_dates(normalized_df["Date"])
-    valid_mask = parsed_dates.notna()
-    normalized_df = normalized_df.loc[valid_mask].copy()
-    normalized_df["Date"] = parsed_dates.loc[valid_mask].dt.strftime(YNAB_OUTPUT_DATE_FORMAT)
-    return normalized_df
+    return normalize_date_column(
+        df=df,
+        date_column="Date",
+        input_date_format=MIZRACHI_INPUT_DATE_FORMAT,
+        output_date_format=YNAB_OUTPUT_DATE_FORMAT,
+    )
 
 
 # Output shaping

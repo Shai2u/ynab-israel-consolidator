@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import pandas as pd
 
+from etl_common.column_mapping import translate_columns
+from etl_common.date_normalization import normalize_date_column
+from etl_common.header_detection import detect_header_row_by_required_headers, apply_header_row
 from etl_sources.leumi_reader import load_leumi_tables
 from etl_sources.account_registry import attach_account_metadata
 from etl_sources.constants import YNAB_OUTPUT_DATE_FORMAT
@@ -11,6 +14,7 @@ from etl_sources.leumi_constants import (
     LEUMI_ACCOUNT_NAME,
     LEUMI_SOURCE_TO_CANONICAL_COLUMN_MAP,
     LEUMI_INPUT_DATE_FORMAT,
+    LEUMI_REQUIRED_HEADERS,
 )
 
 
@@ -41,7 +45,7 @@ def normalize_leumi_table(
     df_pending: pd.DataFrame, dates_range: tuple[str, str] | None = None
 ) -> pd.DataFrame:
     """End-to-end Leumi normalization story (to be implemented by you)."""
-    header_row_idx = detect_leumi_header_row(df_pending)
+    header_row_idx = detect_header_row_by_required_headers(df_pending, required_headers=LEUMI_REQUIRED_HEADERS)
     normalized_df = apply_header_row(df_pending, header_row_idx)
     normalized_df = translate_leumi_columns(normalized_df)
     normalized_df = normalize_ynab_date_column(normalized_df)
@@ -69,31 +73,25 @@ def detect_leumi_header_row(df: pd.DataFrame, default_row_idx: int = 1) -> int:
     return default_row_idx
 
 
-def apply_header_row(df: pd.DataFrame, header_row_idx: int) -> pd.DataFrame:
-    """Promote detected header row and return data rows below it."""
-    if not 0 <= header_row_idx < len(df):
-        raise ValueError(f"header_row_idx out of range: {header_row_idx}")
 
-    with_header_df = df.copy()
-    with_header_df.columns = with_header_df.iloc[header_row_idx, :]
-    return with_header_df.iloc[header_row_idx + 1 :].reset_index(drop=True)
 
 
 def translate_leumi_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Translate Leumi source headers to canonical names."""
-    translated_df = df.copy()
-    translated_df.columns = translated_df.columns.map(LEUMI_SOURCE_TO_CANONICAL_COLUMN_MAP)
-    return translated_df
+    return translate_columns(
+        df=df,
+        source_to_canonical_map=LEUMI_SOURCE_TO_CANONICAL_COLUMN_MAP,
+    )
 
 
 def normalize_ynab_date_column(df: pd.DataFrame) -> pd.DataFrame:
     """Parse and normalize Leumi date column to YNAB format."""
-    normalized_df = df.copy()
-    parsed_dates = pd.to_datetime(normalized_df["Date"], format=LEUMI_INPUT_DATE_FORMAT, errors="coerce")
-    valid_mask = parsed_dates.notna()
-    normalized_df = normalized_df.loc[valid_mask].copy()
-    normalized_df["Date"] = parsed_dates.loc[valid_mask].dt.strftime(YNAB_OUTPUT_DATE_FORMAT)
-    return normalized_df
+    return normalize_date_column(
+        df=df,
+        date_column="Date",
+        input_date_format=LEUMI_INPUT_DATE_FORMAT,
+        output_date_format=YNAB_OUTPUT_DATE_FORMAT,
+    )
 
 
 def filter_by_dates_range(
