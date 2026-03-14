@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pandas as pd
 
-from etl_common.column_mapping import translate_columns
-from etl_common.date_normalization import normalize_date_column
+from etl_common.column_mapping import select_mapped_columns, translate_columns
+from etl_common.date_utilities import normalize_date_column, filter_by_dates_range
 from etl_sources.account_registry import attach_account_metadata
 from etl_sources.constants import YNAB_OUTPUT_DATE_FORMAT
 from etl_sources.hapoalim_constants import (
@@ -41,7 +41,7 @@ def normalize_hapoalim_table(
     normalized_df = apply_header_row(df_pending, header_row_idx)
     normalized_df = translate_hapoalim_columns(normalized_df)
     normalized_df = normalize_ynab_date_column(normalized_df)
-    normalized_df = filter_by_dates_range(normalized_df, dates_range=dates_range)
+    normalized_df = filter_by_dates_range(normalized_df, date_column="Date", dates_range=dates_range, output_date_format=YNAB_OUTPUT_DATE_FORMAT)
     normalized_df = select_mapped_output_columns(normalized_df)
     normalized_df = add_hapoalim_account_metadata(normalized_df)
     return normalized_df
@@ -69,30 +69,12 @@ def normalize_ynab_date_column(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def filter_by_dates_range(
-    df: pd.DataFrame, dates_range: tuple[str, str] | None = None
-) -> pd.DataFrame:
-    """Optional inclusive date-range filter on normalized ``Date`` column."""
-    if dates_range is None:
-        return df.copy()
-
-    start_date_str, end_date_str = dates_range
-    start_date = pd.to_datetime(start_date_str, format=YNAB_OUTPUT_DATE_FORMAT, errors="raise")
-    end_date = pd.to_datetime(end_date_str, format=YNAB_OUTPUT_DATE_FORMAT, errors="raise")
-
-    parsed_dates = pd.to_datetime(df["Date"], format=YNAB_OUTPUT_DATE_FORMAT, errors="coerce")
-    in_range_mask = parsed_dates.between(start_date, end_date, inclusive="both")
-    return df.loc[in_range_mask].copy()
-
-
 def select_mapped_output_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Keep only mapped canonical output columns that exist."""
-    keep_columns = [
-        column
-        for column in HAPOALIM_SOURCE_TO_CANONICAL_COLUMN_MAP.values()
-        if column in df.columns
-    ]
-    return df[keep_columns]
+    return select_mapped_columns(
+        df=df,
+        source_to_canonical_map=HAPOALIM_SOURCE_TO_CANONICAL_COLUMN_MAP,
+    )
 
 
 def add_hapoalim_account_metadata(df: pd.DataFrame) -> pd.DataFrame:

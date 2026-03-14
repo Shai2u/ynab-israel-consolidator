@@ -26,3 +26,25 @@ def translate_columns(
     translated_df = df.copy()
     translated_df.columns = translated_df.columns.map(source_to_canonical_map)
     return translated_df
+
+
+def select_mapped_columns(
+    df: pd.DataFrame,
+    source_to_canonical_map: dict[str, str],
+) -> pd.DataFrame:
+    """Keep only mapped canonical columns that exist in the dataframe.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe after translation/normalization steps.
+    source_to_canonical_map : dict[str, str]
+        Mapping from source header names to canonical names.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe containing only mapped canonical columns present in ``df``.
+    """
+    keep_columns = [column for column in source_to_canonical_map.values() if column in df.columns]
+    return df[keep_columns]

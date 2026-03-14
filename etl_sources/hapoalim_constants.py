@@ -4,7 +4,7 @@
 HAPOALIM_ACCOUNT_NAME = "Bank Hapoalim"
 
 # Fill this once you confirm the export date pattern(s), e.g. "%d/%m/%Y".
-HAPOALIM_INPUT_DATE_FORMAT = ""
+HAPOALIM_INPUT_DATE_FORMAT =  "%Y-%m-%d %H:%M:%S"
 
 HAPOALIM_REQUIRED_HEADERS = {"עבור", "לטובת", "זכות", "חובה", "פרטים", "הפעולה", "תאריך"}
 

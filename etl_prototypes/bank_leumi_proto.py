@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pandas as pd
 
-from etl_common.column_mapping import translate_columns
-from etl_common.date_normalization import normalize_date_column
+from etl_common.column_mapping import select_mapped_columns, translate_columns
+from etl_common.date_utilities import normalize_date_column, filter_by_dates_range
 from etl_common.header_detection import detect_header_row_by_required_headers, apply_header_row
 from etl_sources.leumi_reader import load_leumi_tables
 from etl_sources.account_registry import attach_account_metadata
@@ -49,7 +49,7 @@ def normalize_leumi_table(
     normalized_df = apply_header_row(df_pending, header_row_idx)
     normalized_df = translate_leumi_columns(normalized_df)
     normalized_df = normalize_ynab_date_column(normalized_df)
-    normalized_df = filter_by_dates_range(normalized_df, dates_range=dates_range)
+    normalized_df = filter_by_dates_range(normalized_df, date_column="Date", dates_range=dates_range, output_date_format=YNAB_OUTPUT_DATE_FORMAT)
     normalized_df = select_mapped_output_columns(normalized_df)
     normalized_df = add_leumi_account_metadata(normalized_df)
     return normalized_df
@@ -112,10 +112,10 @@ def filter_by_dates_range(
 
 def select_mapped_output_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Keep only mapped canonical output columns that exist."""
-    keep_columns = [
-        column for column in LEUMI_SOURCE_TO_CANONICAL_COLUMN_MAP.values() if column in df.columns
-    ]
-    return df[keep_columns]
+    return select_mapped_columns(
+        df=df,
+        source_to_canonical_map=LEUMI_SOURCE_TO_CANONICAL_COLUMN_MAP,
+    )
 
 
 def add_leumi_account_metadata(df: pd.DataFrame) -> pd.DataFrame:

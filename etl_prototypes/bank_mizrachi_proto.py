@@ -4,8 +4,8 @@
 from etl_sources.mizrachi_reader import load_mizrachi_tables
 from etl_sources.account_registry import attach_account_metadata
 from etl_sources.constants import YNAB_OUTPUT_DATE_FORMAT
-from etl_common.column_mapping import translate_columns
-from etl_common.date_normalization import normalize_date_column
+from etl_common.column_mapping import select_mapped_columns, translate_columns
+from etl_common.date_utilities import normalize_date_column
 from etl_sources.mizrachi_constants import (
     MIZRACHI_ACCOUNT_NAME,
     MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP,
@@ -315,12 +315,10 @@ def select_mapped_output_columns(df: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         Dataframe limited to mapped output columns present in ``df``.
     """
-    keep_columns = [
-        column
-        for column in MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP.values()
-        if column in df.columns
-    ]
-    return df[keep_columns]
+    return select_mapped_columns(
+        df=df,
+        source_to_canonical_map=MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP,
+    )
 
 
 # Account metadata

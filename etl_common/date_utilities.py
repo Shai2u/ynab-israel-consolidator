@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pandas as pd
+from etl_sources.constants import YNAB_OUTPUT_DATE_FORMAT
 
 
 def normalize_date_column(
@@ -39,3 +40,18 @@ def normalize_date_column(
     normalized_df = normalized_df.loc[valid_mask].copy()
     normalized_df[date_column] = parsed_dates.loc[valid_mask].dt.strftime(output_date_format)
     return normalized_df
+
+def filter_by_dates_range(
+    df: pd.DataFrame, date_column: str, dates_range: tuple[str, str] | None = None, output_date_format: str = YNAB_OUTPUT_DATE_FORMAT
+) -> pd.DataFrame:
+    """Optional inclusive date-range filter on normalized ``Date`` column."""
+    if dates_range is None:
+        return df.copy()
+
+    start_date_str, end_date_str = dates_range
+    start_date = pd.to_datetime(start_date_str, format=output_date_format, errors="raise")
+    end_date = pd.to_datetime(end_date_str, format=output_date_format, errors="raise")
+
+    parsed_dates = pd.to_datetime(df[date_column], format=output_date_format, errors="coerce")
+    in_range_mask = parsed_dates.between(start_date, end_date, inclusive="both")
+    return df.loc[in_range_mask].copy()
