@@ -76,6 +76,33 @@ Scaffold phase. Core modules, parser registry, matcher, CLI, and tests are next.
 - Reuse the same deterministic core later behind a Django UI.
 - Support date-range filtering in both script mode and future UI mode.
 
+## Future Feature: Credit Card Settlement Matching
+- Goal: match credit card statement totals/charges against corresponding bank account transactions (card settlement payments).
+- Important constraint: settlement dates often do not exactly match card transaction dates, and grouped totals may differ from simple per-day sums.
+- Current status: **not implemented in v1 prototype ETL**.
+- Planned approach (future):
+  - deterministic matching only (amount windows + settlement date windows + explicit tie-break rules),
+  - explicit confidence/scoring artifacts,
+  - no hidden inference in runtime.
+
+## Consolidated Future Versions Roadmap
+- **Phase 1 (current discovery):**
+  - Build per-account prototypes first (banks, then credit cards) with source-specific rules.
+  - Keep deterministic pandas flows and avoid early over-abstraction.
+- **Phase 2 (post-prototype consolidation):**
+  - Extract stable shared helpers only after multiple real account formats are proven.
+  - Introduce a minimal common interface for source adapters (load -> detect -> normalize -> enrich).
+- **Phase 3 (automation and batching):**
+  - Add drag-and-drop/batch ingestion flow.
+  - Auto-detect source/account type and ownership from known signatures + registry.
+  - Keep an audit/review step before final consolidation.
+- **Phase 4 (reconciliation expansion):**
+  - Add deterministic card-settlement-to-bank matching with date/amount windows.
+  - Export explicit confidence and trace artifacts (no hidden runtime inference).
+- **Phase 5 (productization):**
+  - Reuse deterministic ETL/reconciliation core behind a Django UI.
+  - Preserve script-first mode for power users and debugging.
+
 ## YNAB-Oriented Consolidated Columns (Current v1 intent)
 - `Ownership`:
   - Who owns the account/transaction context, e.g. `Shai (Private)` or `Shai & Nirit (Joint)`.
