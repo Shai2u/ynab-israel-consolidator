@@ -24,6 +24,7 @@ def translate_columns(
         Copy of ``df`` with translated columns.
     """
     translated_df = df.copy()
+    translated_df.columns = translated_df.columns.str.replace('\n', ' ').str.strip()
     translated_df.columns = translated_df.columns.map(source_to_canonical_map)
     return translated_df
 

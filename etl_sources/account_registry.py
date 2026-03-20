@@ -21,6 +21,8 @@ ACCOUNT_TO_OWNERSHIP: dict[str, str] = {
     "Isracard 4054": OWNERSHIP_SHAI_NIRIT_JOINT,
     "Mastercard 4779": OWNERSHIP_SHAI_PRIVATE,
     "Mastercard 7353": OWNERSHIP_SHAI_PRIVATE,
+    "Mastercard_4779_private": OWNERSHIP_SHAI_PRIVATE,
+    "Mastercard_7353_private": OWNERSHIP_SHAI_PRIVATE,
 }
 
 # Account -> linked settlement bank mapping.
@@ -35,6 +37,8 @@ ACCOUNT_TO_LINKED_BANK: dict[str, str] = {
     "Isracard 4054": "Mizrachi",
     "Mastercard 4779": "Bank Hapoalim",
     "Mastercard 7353": "Bank Leumi",
+    "Mastercard_4779_private": "Bank Hapoalim",
+    "Mastercard_7353_private": "Bank Leumi",
 }
 
 
