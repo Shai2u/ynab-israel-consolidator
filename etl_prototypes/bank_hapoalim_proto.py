@@ -30,7 +30,9 @@ def main(path_to_folder: str, dates_range: tuple[str, str] | None = None) -> Non
         print(f"Requested date range: {dates_range[0]} -> {dates_range[1]}")
 
     df_pending = normalize_hapoalim_table(df_pending, dates_range=dates_range)
+    df_pending = memo_hapoalim_table(df_pending)
     print(df_pending.head())
+    return df_pending
 
 
 def normalize_hapoalim_table(
@@ -46,7 +48,17 @@ def normalize_hapoalim_table(
     normalized_df = attach_account_metadata(df=normalized_df, account_name=HAPOALIM_ACCOUNT_NAME)
     return normalized_df
 
+def memo_hapoalim_table(df_pending: pd.DataFrame) -> pd.DataFrame:
+    """Memo the Hapoalim table."""
+    print(df_pending.head())
+    for col in ['Details', 'To Whom 2', 'From Whom']:
+        if col in df_pending.columns:
+            df_pending[col] = df_pending[col].apply(lambda p: str(p).replace('nan', ''))
+            df_pending[col] = df_pending[col].apply(lambda p: f"{str(p).strip()}, " if str(p).strip() != '' else '')
 
+    df_pending['Memo'] = df_pending['Details'] + df_pending['To Whom 2'] + df_pending['From Whom']
+    df_pending = df_pending.drop(columns=['Details', 'To Whom 2', 'From Whom'])
+    return df_pending
 
 
 

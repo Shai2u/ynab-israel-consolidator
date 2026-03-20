@@ -39,7 +39,7 @@ def main(path_to_folder: str, dates_range: tuple[str, str] | None = None) -> Non
 
     df_pending = normalize_leumi_table(df_pending, dates_range=dates_range)
     
-    print('in')
+    return df_pending
 
 def normalize_leumi_table(
     df_pending: pd.DataFrame, dates_range: tuple[str, str] | None = None
@@ -93,21 +93,6 @@ def normalize_ynab_date_column(df: pd.DataFrame) -> pd.DataFrame:
         output_date_format=YNAB_OUTPUT_DATE_FORMAT,
     )
 
-
-def filter_by_dates_range(
-    df: pd.DataFrame, dates_range: tuple[str, str] | None = None
-) -> pd.DataFrame:
-    """Optional inclusive date-range filter on normalized ``Date`` column."""
-    if dates_range is None:
-        return df.copy()
-
-    start_date_str, end_date_str = dates_range
-    start_date = pd.to_datetime(start_date_str, format=YNAB_OUTPUT_DATE_FORMAT, errors="raise")
-    end_date = pd.to_datetime(end_date_str, format=YNAB_OUTPUT_DATE_FORMAT, errors="raise")
-
-    parsed_dates = pd.to_datetime(df["Date"], format=YNAB_OUTPUT_DATE_FORMAT, errors="coerce")
-    in_range_mask = parsed_dates.between(start_date, end_date, inclusive="both")
-    return df.loc[in_range_mask].copy()
 
 
 def select_mapped_output_columns(df: pd.DataFrame) -> pd.DataFrame:

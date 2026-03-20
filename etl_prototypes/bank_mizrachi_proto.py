@@ -42,7 +42,7 @@ def main(path_to_folder: str, dates_range: tuple[str, str] | None = None) -> Non
     # Prototype next steps:
     # - Split inflow/outflow to YNAB-compatible amount fields.
     # - Add installment-specific handling.
-
+    return df_pending
 # Pipeline steps
 # End-to-end normalization story
 def normalize_mizrachi_table(
