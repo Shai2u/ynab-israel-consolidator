@@ -39,4 +39,4 @@ MAX_UNIQ_SOURCE_TO_CANONICAL_COLUMN_MAP: dict[str, str] = {'תאריך עסקה'
                                                           'תיוגים': 'Tags',
                                                           'מועדון הנחות': 'Discount_club',
                                                           'שער המרה ממטבע מקור/התחשבנות לש\"ח': 'Exchange_rate'}
-MAX_UNIQ_DICT_COLS = {'Method_of_execution': 'Method', 'Original_amount': 'Original Amount', 'Category_temp': 'Category', 'Currency_of_charge': 'Currency', 'Original_currency': 'Orig Currency', 'Type_of_transaction': 'Type', 'Date_of_charge': 'Date of Charge', 'Tags': 'Tags', 'Discount_club': 'Discount', 'Exchange_rate': 'Exchange Rate', 'Memo_temp':'Memo_temp'}
+MAX_UNIQ_DICT_COLS = {'Method_of_execution': 'Method', 'Original_amount': 'Original Amount', 'Category_temp': 'Category', 'Currency_of_charge': 'Currency', 'Original_currency': 'Orig Currency', 'Type_of_transaction': 'Type', 'Date_of_charge': 'Date of Charge', 'Tags': 'Tags', 'Discount_club': 'Discount', 'Exchange_rate': 'Exchange Rate', 'Memo_temp':'Memo'}

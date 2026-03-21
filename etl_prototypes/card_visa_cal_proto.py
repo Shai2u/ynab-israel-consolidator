@@ -14,6 +14,7 @@ from etl_sources.visa_cal_constants import (
     VISA_CAL_LAST4_TO_ACCOUNT_NAME,
     VISA_CAL_REQUIRED_HEADERS,
     VISA_CAL_SOURCE_TO_CANONICAL_COLUMN_MAP,
+    VISA_CAL_DICT_COLS,
 )
 from etl_sources.visa_cal_reader import load_visa_cal_tables
 
@@ -53,21 +54,18 @@ def resolve_visa_cal_account_name(account_last4: str) -> str:
         )
     return account_name
 
-def memo_visa_cal_table(df: pd.DataFrame) -> pd.DataFrame:
+def memo_visa_cal_table(df: pd.DataFrame, dict_cols: dict[str, str]) -> pd.DataFrame:
     """Memo the Visa Cal table."""
-    cols = ['Memo', 'Type_of_transaction', 'Discount']
-    cols_dict = {'Memo': 'Memo', 'Type_of_transaction': 'Type', 'Discount': 'Discount'}
+    cols = list(dict_cols.keys())
     for col in cols:
         if col in df.columns:
             df[col] = df[col].apply(lambda p: str(p).replace('nan', ''))
-            df[col] = df[col].apply(lambda p: f"{cols_dict[col]}:{str(p).strip()}, " if str(p).strip() != '' else '')
-    cols_to_remove = []
+            df[col] = df[col].apply(lambda p: f"{dict_cols[col]}:{str(p).strip()}, " if str(p).strip() != '' else '')
+    df['Memo'] = ''
     for col in cols:
         if col in df.columns:
-            df['Memo'] = df['Memo'] + df[col]
-            cols_to_remove.append(col)
-    cols_to_remove.remove('Memo')
-    df = df.drop(columns=cols_to_remove)
+            df['Memo'] += df[col]
+    df = df.drop(columns=cols)
     return df
 
 def normalize_visa_cal_table(
@@ -98,12 +96,11 @@ def normalize_visa_cal_table(
         source_to_canonical_map=VISA_CAL_SOURCE_TO_CANONICAL_COLUMN_MAP,
     )
     normalized_df = derive_inflow_outflow_from_amount(normalized_df)
-    normalized_df = memo_visa_cal_table(normalized_df)
+    normalized_df = memo_visa_cal_table(normalized_df, dict_cols=VISA_CAL_DICT_COLS)
     normalized_df = attach_account_metadata(
         df=normalized_df,
         account_name=account_name,
     )
-    normalized_df.drop(columns=['Date_of_charge'], inplace=True)
     return normalized_df
 
 

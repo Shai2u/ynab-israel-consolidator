@@ -19,5 +19,6 @@ VISA_CAL_SOURCE_TO_CANONICAL_COLUMN_MAP: dict[str, str] = {'סוג עסקה': 'T
                                                           'שם בית עסק': 'Payee',
                                                           'פרטי חיוב': 'Details',
                                                           'תאריך עסקה': 'Date',
-                                                          'הערות': 'Memo',
+                                                          'הערות': 'Memo_temp',
                                                           'הנחה': 'Discount'}
+VISA_CAL_DICT_COLS = {'Type_of_transaction': 'Type', 'Date_of_charge': 'Date of Charge', 'Memo_temp': 'Memo', 'Discount': 'Discount'}
