@@ -76,3 +76,35 @@ Session notes for cross-machine and cross-editor continuity.
   - Add initial CLI scaffold (`ingest`, `normalize`, `issues`).
   - Add detector + label-audit CSV flow.
   - Add first source parser + tests using sample files.
+
+---
+
+## 2026-03-13
+- Date: 2026-03-13
+- Time: evening
+- Timezone: local
+- Machine: windows org
+- Editor: Cursor
+- Branch: `main`
+- Goal: complete prototype phase and bookmark consolidation direction.
+- Tasks completed:
+  - Built personalized prototype flows for multiple bank and credit-card sources.
+  - Added shared deterministic utilities where patterns stabilized (header detection, date utilities, column mapping).
+  - Added account ownership + linked-bank registry metadata for future settlement logic.
+- Decisions:
+  - Keep onboarding of new formats flexible with per-source constants/readers/prototypes.
+  - Defer full class/abstraction consolidation until after enough real statement variants are captured.
+  - Future architecture should be textbook-friendly for teaching, while supporting source-specific complexity.
+  - Future reconciliation feature (card settlement vs bank postings) remains explicitly out-of-scope for current runtime.
+- Files touched:
+  - `etl_prototypes/*`
+  - `etl_sources/*`
+  - `etl_common/*`
+  - `README.md`
+  - `ACCOUNT_REGISTRY.md`
+- Open issues:
+  - Need a consolidation design pass to convert prototypes into standardized script/class structure.
+  - Need handling strategy for future semi-personalized and format-drift statement variants.
+- Next session tasks:
+  - Define minimal adapter interface for source pipelines (while preserving per-source customization points).
+  - Draft boilerplate template for adding future bank/card formats with low friction.
