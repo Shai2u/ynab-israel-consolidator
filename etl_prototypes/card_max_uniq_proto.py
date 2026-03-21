@@ -15,6 +15,7 @@ from etl_sources.max_uniq_constants import (
     MAX_UNIQ_INPUT_DATE_FORMAT,
     MAX_UNIQ_REQUIRED_HEADERS,
     MAX_UNIQ_SOURCE_TO_CANONICAL_COLUMN_MAP,
+    MAX_UNIQ_DICT_COLS,
 )
 from etl_sources.max_uniq_reader import load_max_uniq_tables
 
@@ -38,20 +39,19 @@ def main(path_to_folder: str, dates_range: tuple[str, str] | None = None) -> pd.
     print(combined_normalized_df.head())
     return combined_normalized_df
 
-def memo_max_uniq_table(df: pd.DataFrame) -> pd.DataFrame:
+def memo_max_uniq_table(df: pd.DataFrame, dict_cols: dict[str, str]) -> pd.DataFrame:
     """Memo the Max Uniq table."""
-    cols = ['Memo', 'Category_temp', 'Currency_of_charge', 'Original_currency', 'Type_of_transaction','Date_of_charge','Tags', 'Discount_club', 'Exchange_rate']
-    dict_cols = {'Category_temp': 'Category', 'Currency_of_charge': 'Currency', 'Original_currency': 'Orig Currency', 'Type_of_transaction': 'Type', 'Date_of_charge': 'Date of Charge', 'Tags': 'Tags', 'Discount_club': 'Discount', 'Exchange_rate': 'Exchange Rate'}
+    cols = list(dict_cols.keys())
+
     for col in cols:
         if col in df.columns:
             df[col] = df[col].apply(lambda p: str(p).replace('nan', ''))
             df[col] = df[col].apply(lambda p: f"{dict_cols.get(col, col)}:{str(p).strip()}, " if str(p).strip() != '' else '')
+    df['Memo'] = ''
     for col in cols:
         if col in df.columns:
-            df['Memo'] = df['Memo'] + df[col]
-    cols_to_remove = cols.copy()
-    cols_to_remove.remove('Memo')
-    df = df.drop(columns=cols_to_remove)
+            df['Memo'] += df[col]
+    df = df.drop(columns=cols)
     return df
 
 def normalize_max_uniq_table(
@@ -79,7 +79,9 @@ def normalize_max_uniq_table(
         df=normalized_df,
         source_to_canonical_map=MAX_UNIQ_SOURCE_TO_CANONICAL_COLUMN_MAP,
     )
-    normalized_df = memo_max_uniq_table(normalized_df)
+    normalized_df = derive_inflow_outflow_from_amount(normalized_df)
+    normalized_df = memo_max_uniq_table(normalized_df, dict_cols=MAX_UNIQ_DICT_COLS)
+    
     normalized_df = attach_account_metadata(
         df=normalized_df,
         account_name=MAX_UNIQ_ACCOUNT_NAME,
@@ -97,6 +99,26 @@ def normalize_ynab_date_column(df: pd.DataFrame) -> pd.DataFrame:
         input_date_format=MAX_UNIQ_INPUT_DATE_FORMAT,
         output_date_format=YNAB_OUTPUT_DATE_FORMAT,
     )
+
+
+def derive_inflow_outflow_from_amount(df: pd.DataFrame) -> pd.DataFrame:
+    """Derive Inflow/Outflow from Amount based on minus-sign rule."""
+    if "Amount" not in df.columns:
+        raise ValueError("Expected 'Amount' column after mapping.")
+
+    normalized_df = df.copy()
+    amount_str = normalized_df["Amount"].astype(str).str.strip()
+    numeric_amount = pd.to_numeric(
+        amount_str.str.replace(r"[^0-9.\-]", "", regex=True),
+        errors="coerce",
+    )
+    abs_amount = numeric_amount.abs()
+    minus_mask = amount_str.str.contains("-", regex=False)
+
+    normalized_df["Inflow"] = abs_amount.where(minus_mask, 0.0)
+    normalized_df["Outflow"] = abs_amount.where(~minus_mask, 0.0)
+    normalized_df = normalized_df.drop(columns=["Amount"])
+    return normalized_df
 
 
 if __name__ == "__main__":
