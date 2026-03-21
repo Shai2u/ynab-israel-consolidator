@@ -65,6 +65,19 @@
       },
       "console": "integratedTerminal",
       "justMyCode": true
+    },
+    {
+      "name": "Debug: card_isracard_proto",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/etl_prototypes/card_isracard_proto.py",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": true
     }
   ]
 }
