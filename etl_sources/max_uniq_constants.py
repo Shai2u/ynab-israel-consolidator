@@ -4,7 +4,7 @@
 MAX_UNIQ_ACCOUNT_NAME = "Max Uniq"
 
 # Fill this once you confirm the export date pattern(s), e.g. "%d/%m/%Y".
-MAX_UNIQ_INPUT_DATE_FORMAT = ""
+MAX_UNIQ_INPUT_DATE_FORMAT = "%d-%m-%Y"
 
 # Default header row index fallback in Max Uniq exports.
 MAX_UNIQ_HEADER_DEFAULT_ROW_IDX = 3

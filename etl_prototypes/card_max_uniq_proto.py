@@ -38,6 +38,21 @@ def main(path_to_folder: str, dates_range: tuple[str, str] | None = None) -> pd.
     print(combined_normalized_df.head())
     return combined_normalized_df
 
+def memo_max_uniq_table(df: pd.DataFrame) -> pd.DataFrame:
+    """Memo the Max Uniq table."""
+    cols = ['Memo', 'Category_temp', 'Currency_of_charge', 'Original_currency', 'Type_of_transaction','Date_of_charge','Tags', 'Discount_club', 'Exchange_rate']
+    dict_cols = {'Category_temp': 'Category', 'Currency_of_charge': 'Currency', 'Original_currency': 'Orig Currency', 'Type_of_transaction': 'Type', 'Date_of_charge': 'Date of Charge', 'Tags': 'Tags', 'Discount_club': 'Discount', 'Exchange_rate': 'Exchange Rate'}
+    for col in cols:
+        if col in df.columns:
+            df[col] = df[col].apply(lambda p: str(p).replace('nan', ''))
+            df[col] = df[col].apply(lambda p: f"{dict_cols.get(col, col)}:{str(p).strip()}, " if str(p).strip() != '' else '')
+    for col in cols:
+        if col in df.columns:
+            df['Memo'] = df['Memo'] + df[col]
+    cols_to_remove = cols.copy()
+    cols_to_remove.remove('Memo')
+    df = df.drop(columns=cols_to_remove)
+    return df
 
 def normalize_max_uniq_table(
     df_pending: pd.DataFrame, dates_range: tuple[str, str] | None = None
@@ -64,6 +79,7 @@ def normalize_max_uniq_table(
         df=normalized_df,
         source_to_canonical_map=MAX_UNIQ_SOURCE_TO_CANONICAL_COLUMN_MAP,
     )
+    normalized_df = memo_max_uniq_table(normalized_df)
     normalized_df = attach_account_metadata(
         df=normalized_df,
         account_name=MAX_UNIQ_ACCOUNT_NAME,
