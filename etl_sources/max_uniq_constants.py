@@ -6,8 +6,22 @@ MAX_UNIQ_ACCOUNT_NAME = "Max Uniq"
 # Fill this once you confirm the export date pattern(s), e.g. "%d/%m/%Y".
 MAX_UNIQ_INPUT_DATE_FORMAT = ""
 
-# Fill this with required header values for header row detection.
-MAX_UNIQ_REQUIRED_HEADERS: set[str] = set()
+# Default header row index fallback in Max Uniq exports.
+MAX_UNIQ_HEADER_DEFAULT_ROW_IDX = 3
+
+# Header signature used to detect the true header row.
+MAX_UNIQ_REQUIRED_HEADERS: set[str] = {
+    "תאריך עסקה",
+    "שם בית העסק",
+    "קטגוריה",
+    "סוג עסקה",
+    "מטבע חיוב",
+    "מטבע עסקה מקורי",
+    "תאריך חיוב",
+    "הערות",
+    "אופן ביצוע ההעסקה",
+    "שער המרה ממטבע מקור/התחשבנות לש\"ח",
+}
 
 # Fill this with source header mappings once discovered.
 MAX_UNIQ_SOURCE_TO_CANONICAL_COLUMN_MAP: dict[str, str] = {}

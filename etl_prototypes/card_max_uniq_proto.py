@@ -11,6 +11,7 @@ from etl_sources.account_registry import attach_account_metadata
 from etl_sources.constants import YNAB_OUTPUT_DATE_FORMAT
 from etl_sources.max_uniq_constants import (
     MAX_UNIQ_ACCOUNT_NAME,
+    MAX_UNIQ_HEADER_DEFAULT_ROW_IDX,
     MAX_UNIQ_INPUT_DATE_FORMAT,
     MAX_UNIQ_REQUIRED_HEADERS,
     MAX_UNIQ_SOURCE_TO_CANONICAL_COLUMN_MAP,
@@ -45,7 +46,7 @@ def normalize_max_uniq_table(
     header_row_idx = detect_header_row_by_required_headers(
         df_pending,
         required_headers=MAX_UNIQ_REQUIRED_HEADERS,
-        default_row_idx=0,
+        default_row_idx=MAX_UNIQ_HEADER_DEFAULT_ROW_IDX,
     )
     normalized_df = apply_header_row(df_pending, header_row_idx)
     normalized_df = translate_columns(
