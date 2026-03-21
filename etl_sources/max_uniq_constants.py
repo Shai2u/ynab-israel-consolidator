@@ -24,4 +24,15 @@ MAX_UNIQ_REQUIRED_HEADERS: set[str] = {
 }
 
 # Fill this with source header mappings once discovered.
-MAX_UNIQ_SOURCE_TO_CANONICAL_COLUMN_MAP: dict[str, str] = {}
+MAX_UNIQ_SOURCE_TO_CANONICAL_COLUMN_MAP: dict[str, str] = {'תאריך עסקה': 'Date',
+                                                          'שם בית העסק': 'Payee',
+                                                          'קטגוריה': 'Category_temp',
+                                                          'סוג עסקה': 'Type_of_transaction',
+                                                          'מטבע חיוב': 'Currency_of_charge',
+                                                          'מטבע עסקה מקורי': 'Original_currency',
+                                                          'תאריך חיוב': 'Date_of_charge',
+                                                          'הערות': 'Memo',
+                                                          'אופן ביצוע ההעסקה': 'Method_of_execution',
+                                                          'תיוגים': 'Tags',
+                                                          'מועדון הנחות': 'Discount_club',
+                                                          'שער המרה ממטבע מקור/התחשבנות לש\"ח': 'Exchange_rate'}
