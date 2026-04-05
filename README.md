@@ -114,10 +114,11 @@ Steps are ordered by dependency. All matching and scoring steps are fully determ
 
 **Storage design (cost-first):**
 - User uploads are stored in a small ephemeral area (target: ≤ 100 MB per user session).
-- Uploaded files and processed outputs are auto-deleted after a short TTL (e.g. 24–48 hours).
-- No long-term transaction storage on the server — the source of truth stays with the user's local export files.
-- Goal: keep hosting free or near-free (e.g. Railway, Fly.io, Render free tier) with no database storage costs for raw file data.
-- If persistent storage is ever needed (e.g. error logs, quality scores), use a minimal append-only table with a row limit, not raw file storage.
+- Raw uploaded files are temporary — auto-deleted after processing (TTL window TBD ❓).
+- **Processed output** (normalized canonical rows) may be persisted in a lightweight SQLite database instead of keeping the raw files around. SQLite is free, file-based, and well-supported by Django — no separate DB server needed.
+- No long-term raw file storage on the server — the source of truth stays with the user's local export files.
+- Goal: keep hosting free or near-free (e.g. Railway, Fly.io, Render free tier).
+- SQLite also naturally supports future persistent features: error logs, quality scores, match history (Steps 7–9) — all in one small file with a row/size limit to cap growth.
 
 ### Step 6 — Auto-match & Fingerprinting
 - Generate a deterministic fingerprint per transaction (date + amount + payee hash).
