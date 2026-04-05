@@ -65,7 +65,7 @@ def memo_visa_cal_table(df: pd.DataFrame, dict_cols: dict[str, str]) -> pd.DataF
     for col in cols:
         if col in df.columns:
             df['Memo'] += df[col]
-    df = df.drop(columns=cols)
+    df = df.drop(columns=[c for c in cols if c in df.columns])
     return df
 
 def normalize_visa_cal_table(

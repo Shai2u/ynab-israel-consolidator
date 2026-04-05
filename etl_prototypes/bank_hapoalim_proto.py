@@ -30,7 +30,6 @@ def main(path_to_folder: str, dates_range: tuple[str, str] | None = None) -> Non
         print(f"Requested date range: {dates_range[0]} -> {dates_range[1]}")
 
     df_pending = normalize_hapoalim_table(df_pending, dates_range=dates_range)
-    df_pending = memo_hapoalim_table(df_pending)
     print(df_pending.head())
     return df_pending
 
@@ -45,6 +44,7 @@ def normalize_hapoalim_table(
     normalized_df = normalize_ynab_date_column(normalized_df)
     normalized_df = filter_by_dates_range(normalized_df, date_column="Date", dates_range=dates_range, output_date_format=YNAB_OUTPUT_DATE_FORMAT)
     normalized_df = select_mapped_columns(df=normalized_df, source_to_canonical_map=HAPOALIM_SOURCE_TO_CANONICAL_COLUMN_MAP)
+    normalized_df = memo_hapoalim_table(normalized_df)
     normalized_df = attach_account_metadata(df=normalized_df, account_name=HAPOALIM_ACCOUNT_NAME)
     return normalized_df
 

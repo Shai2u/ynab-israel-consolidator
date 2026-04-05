@@ -69,6 +69,7 @@ def normalize_mizrachi_table(
     normalized_df = normalize_ynab_date_column(normalized_df)
     normalized_df = filter_by_dates_range(normalized_df, date_column="Date", dates_range=dates_range, output_date_format=YNAB_OUTPUT_DATE_FORMAT)
     normalized_df = select_mapped_columns(df=normalized_df, source_to_canonical_map=MIZRACHI_HEBREW_TO_CANONICAL_COLUMN_MAP)
+    normalized_df["Memo"] = ""
     normalized_df = attach_account_metadata(df=normalized_df, account_name=MIZRACHI_ACCOUNT_NAME)
     return normalized_df
 
