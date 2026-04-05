@@ -85,23 +85,85 @@ Scaffold phase. Core modules, parser registry, matcher, CLI, and tests are next.
   - explicit confidence/scoring artifacts,
   - no hidden inference in runtime.
 
-## Consolidated Future Versions Roadmap
-- **Phase 1 (current discovery):**
-  - Build per-account prototypes first (banks, then credit cards) with source-specific rules.
-  - Keep deterministic pandas flows and avoid early over-abstraction.
-- **Phase 2 (post-prototype consolidation):**
-  - Extract stable shared helpers only after multiple real account formats are proven.
-  - Introduce a minimal common interface for source adapters (load -> detect -> normalize -> enrich).
-- **Phase 3 (automation and batching):**
-  - Add drag-and-drop/batch ingestion flow.
-  - Auto-detect source/account type and ownership from known signatures + registry.
-  - Keep an audit/review step before final consolidation.
-- **Phase 4 (reconciliation expansion):**
-  - Add deterministic card-settlement-to-bank matching with date/amount windows.
-  - Export explicit confidence and trace artifacts (no hidden runtime inference).
-- **Phase 5 (productization):**
-  - Reuse deterministic ETL/reconciliation core behind a Django UI.
-  - Preserve script-first mode for power users and debugging.
+## Product Roadmap
+
+Steps are ordered by dependency. All matching and scoring steps are fully deterministic Python — no LLM in the reconciliation loop. LLM is reserved only for the final reflective reporting step.
+
+---
+
+### Step 1 — YNAB Integration ✅ (partial)
+- Normalize YNAB CSV exports to a comparable canonical schema.
+- Merge YNAB register with the consolidated source DataFrame into one view.
+
+### Step 2 — Filtering
+- Filter the consolidated DataFrame by Date range and/or Account.
+- Output a filtered slice usable for reconciliation or review.
+
+### Step 3 — Input Selection (CLI)
+- Prompt-based input: choose which source folders to include in a given run.
+- Support both interactive prompt and argument-based invocation.
+
+### Step 4 — Auto-detect Source from Input
+- Infer source account/format from file signature (header row pattern, filename pattern).
+- Match against known registry; fall back to manual selection if unknown.
+
+### Step 5 — Django UI (MVP)
+1. File input: upload source files; auto-detect or select from menu; add new sources.
+2. Consolidated table view: display all normalized transactions in one paginated table.
+3. Filter panel: filter by Account and/or Date range.
+
+### Step 6 — Auto-match & Fingerprinting
+- Generate a deterministic fingerprint per transaction (date + amount + payee hash).
+- Match source rows against YNAB register rows using fingerprint.
+- Color-code rows: perfect match / partial match / unmatched.
+- New column: `match_status` (PERFECT / PARTIAL / MISSING / EXTRA).
+
+### Step 7 — Registration Quality Score
+- Assign a 1–10 quality score per registration using an explicit weighted formula.
+- Reward: perfect date + amount + payee match.
+- Penalize: partial match, major mismatch, missing registration (strongest penalty).
+- Display score as a column; aggregate into a monthly health metric.
+
+### Step 8 — Fuzzy Matching (Easement)
+- Relax matching rules with configurable date window (e.g. ±2 days) and amount tolerance.
+- Update fingerprint and scoring to reflect eased match confidence.
+- All rules remain deterministic — no hidden inference.
+
+### Step 9 — Error Classification & Learning Log
+Classify every non-perfect match into one of these error types (deterministic rules only):
+
+- **a. Not Registered** — source row exists but no corresponding YNAB entry found.
+  Critical: user is unaware of the expense or forgot to register it.
+- **b. Wrong Account** — registration exists but was booked to the wrong account.
+- **c. Small Errors** — registration exists and account is correct but amount is off:
+  - Rounding error (registered by memory, e.g. 7 instead of 7.24)
+  - Decimal shift (e.g. 7.24 instead of 724)
+  - Anagram/transposition error (e.g. 7.42 instead of 7.24)
+  - Total mismatch (date matches, row count matches, but amount is simply wrong)
+
+Log every classified error to a structured file/database for pattern analysis:
+- Track error type frequency per month.
+- Surface patterns: most common mistake, improvement trend, persistent blind spots.
+
+> **Agent boundary**: error detection and logging in Step 9 is fully deterministic.
+> The agent enters only in Step 10 to reflect on the logged patterns.
+
+### Step 10 — Credit Card ↔ Bank Settlement Matching
+- Deterministic date-window + amount-window matching of credit card monthly totals against bank debit entries.
+- Constraint: settlement date ≠ transaction date; grouped totals may not equal simple per-day sums.
+- All rules explicit and auditable; no inference.
+- See also: [Future Feature: Credit Card Settlement Matching](#future-feature-credit-card-settlement-matching).
+
+### Step 11 — Agent: Habit Reflection (Final Stage)
+- The only step where LLM tokens are spent.
+- Input: pre-aggregated error logs and quality scores (never raw transaction rows).
+- Output: short narrative reflecting on registration habits, month-over-month improvement, and recurring mistake patterns.
+- No per-transaction decisions — agent sees summaries only.
+- Goal: save money on tokens while still getting actionable personal insight.
+
+---
+
+**End state**: everything above running behind a secured Django web interface, accessible from any device. Script-first mode preserved for power users and debugging.
 
 ## YNAB-Oriented Consolidated Columns (Current v1 intent)
 - `Ownership`:
