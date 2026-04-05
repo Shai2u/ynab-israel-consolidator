@@ -112,6 +112,13 @@ Steps are ordered by dependency. All matching and scoring steps are fully determ
 2. Consolidated table view: display all normalized transactions in one paginated table.
 3. Filter panel: filter by Account and/or Date range.
 
+**Storage design (cost-first):**
+- User uploads are stored in a small ephemeral area (target: ≤ 100 MB per user session).
+- Uploaded files and processed outputs are auto-deleted after a short TTL (e.g. 24–48 hours).
+- No long-term transaction storage on the server — the source of truth stays with the user's local export files.
+- Goal: keep hosting free or near-free (e.g. Railway, Fly.io, Render free tier) with no database storage costs for raw file data.
+- If persistent storage is ever needed (e.g. error logs, quality scores), use a minimal append-only table with a row limit, not raw file storage.
+
 ### Step 6 — Auto-match & Fingerprinting
 - Generate a deterministic fingerprint per transaction (date + amount + payee hash).
 - Match source rows against YNAB register rows using fingerprint.
