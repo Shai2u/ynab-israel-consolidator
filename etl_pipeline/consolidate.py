@@ -212,6 +212,10 @@ def build_master_df(
     # Enforce column order defined by the contract.
     master_df = master_df[CANONICAL_COLUMNS]
 
+    # Normalize numeric columns: coerce to float, no NaN (use 0.0), 2 decimal places.
+    for col in ("Inflow", "Outflow"):
+        master_df[col] = pd.to_numeric(master_df[col], errors="coerce").fillna(0.0).round(2)
+
     total_bank = sum(len(f) for f in bank_card_frames)
     total_ynab = sum(len(f) for f in ynab_frames)
     print(f"\nMaster DataFrame: {len(master_df)} rows total ({total_bank} bank/card + {total_ynab} YNAB).")
