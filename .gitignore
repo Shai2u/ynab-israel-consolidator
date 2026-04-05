@@ -17,6 +17,9 @@ Thumbs.db
 .env.*
 !.env.example
 
+# Notebooks — output cells may contain transaction data
+notebooks/
+
 # Private financial data (never commit)
 data/
 private_data/
