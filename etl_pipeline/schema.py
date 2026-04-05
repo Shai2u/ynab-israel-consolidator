@@ -10,15 +10,20 @@ from __future__ import annotations
 import pandas as pd
 
 
+# Allowed values for the source_type column.
+SOURCE_TYPE_BANK_CARD = "bank_card"
+SOURCE_TYPE_YNAB = "ynab"
+
 # The ordered list of columns every normalized source must expose.
 CANONICAL_COLUMNS: list[str] = [
-    "Date",       # dd/mm/YYYY string
-    "Payee",      # merchant / counterparty name
-    "Memo",       # optional free-text detail (may be empty string, not NaN)
-    "Inflow",     # positive amount received  (0.0 if none)
-    "Outflow",    # positive amount spent     (0.0 if none)
-    "Account",    # canonical account name from ACCOUNT_REGISTRY.md
-    "Ownership",  # canonical ownership label from ACCOUNT_REGISTRY.md
+    "Date",        # dd/mm/YYYY string
+    "Payee",       # merchant / counterparty name
+    "Memo",        # optional free-text detail (may be empty string, not NaN)
+    "Inflow",      # positive amount received  (0.0 if none)
+    "Outflow",     # positive amount spent     (0.0 if none)
+    "Account",     # canonical account name from ACCOUNT_REGISTRY.md
+    "Ownership",   # canonical ownership label from ACCOUNT_REGISTRY.md
+    "source_type", # origin of the row: SOURCE_TYPE_BANK_CARD or SOURCE_TYPE_YNAB
 ]
 
 

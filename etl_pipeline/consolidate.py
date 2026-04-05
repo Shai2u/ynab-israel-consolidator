@@ -29,7 +29,8 @@ from typing import Callable
 
 import pandas as pd
 
-from etl_pipeline.schema import CANONICAL_COLUMNS, validate_source_df
+from etl_pipeline.schema import CANONICAL_COLUMNS, SOURCE_TYPE_BANK_CARD, SOURCE_TYPE_YNAB, validate_source_df
+from etl_sources.ynab_reader import load_ynab_tables
 from etl_sources.isracard_reader import load_isracard_tables
 from etl_sources.leumi_reader import load_leumi_tables
 from etl_sources.hapoalim_reader import load_hapoalim_tables
@@ -57,6 +58,8 @@ class SourceConfig:
     loader: Callable
     normalizer: Callable
 
+
+YNAB_FOLDER = r"C:\Users\shai\Documents\personal\personal_projects\ynab-israel-consolidator\private_data\incoming\ynab"
 
 SOURCE_REGISTRY: list[SourceConfig] = [
     SourceConfig(
@@ -131,6 +134,7 @@ def collect_source_frames(
 
         for table in loaded_tables:
             normalized_df = source.normalizer(table.dataframe, dates_range=dates_range)
+            normalized_df["source_type"] = SOURCE_TYPE_BANK_CARD
             validate_source_df(normalized_df, source_name=source.name)
             all_frames.append(normalized_df)
             print(f"[{source.name}] {table.path.name}: {len(normalized_df)} rows")
@@ -138,33 +142,79 @@ def collect_source_frames(
     return all_frames
 
 
-def build_master_df(
+def collect_ynab_frames(
     dates_range: tuple[str, str] | None = None,
-) -> pd.DataFrame:
-    """Build the consolidated master DataFrame from all registered sources.
+) -> list[pd.DataFrame]:
+    """Load and validate all YNAB Register files from ``YNAB_FOLDER``.
 
     Parameters
     ----------
     dates_range : tuple[str, str] | None, optional
-        Optional date range filter forwarded to every normalizer.
+        Inclusive date range filter ``(start, end)`` in ``dd/mm/YYYY`` format.
+        Rows outside this range are dropped, by default None (all dates).
+
+    Returns
+    -------
+    list[pd.DataFrame]
+        One validated canonical-schema DataFrame per YNAB Register file.
+    """
+    from etl_common.date_utilities import filter_by_dates_range
+    from etl_sources.constants import YNAB_OUTPUT_DATE_FORMAT
+
+    print(f"[YNAB] loading from {YNAB_FOLDER} ...")
+    raw_frames = load_ynab_tables(folder=YNAB_FOLDER)
+
+    if not raw_frames:
+        print("[YNAB] WARNING: no Register files found, skipping.")
+        return []
+
+    result: list[pd.DataFrame] = []
+    for df in raw_frames:
+        df["source_type"] = SOURCE_TYPE_YNAB
+        df["Memo"] = df["Memo"].fillna("")
+        df = filter_by_dates_range(
+            df,
+            date_column="Date",
+            dates_range=dates_range,
+            output_date_format=YNAB_OUTPUT_DATE_FORMAT,
+        )
+        validate_source_df(df, source_name="YNAB")
+        result.append(df)
+        print(f"[YNAB] {df['__source_file'].iloc[0]}: {len(df)} rows")
+
+    return result
+
+
+def build_master_df(
+    dates_range: tuple[str, str] | None = None,
+) -> pd.DataFrame:
+    """Build the consolidated master DataFrame from all registered sources and YNAB.
+
+    Parameters
+    ----------
+    dates_range : tuple[str, str] | None, optional
+        Optional date range filter forwarded to every normalizer and YNAB loader.
 
     Returns
     -------
     pd.DataFrame
-        Single DataFrame with canonical columns, sorted by ``Date`` ascending,
-        reset index.
+        Single DataFrame with canonical columns from both bank/card sources and YNAB.
     """
-    frames = collect_source_frames(dates_range=dates_range)
+    bank_card_frames = collect_source_frames(dates_range=dates_range)
+    ynab_frames = collect_ynab_frames(dates_range=dates_range)
 
-    if not frames:
-        raise ValueError("No source frames collected. Check folder paths and file contents.")
+    all_frames = bank_card_frames + ynab_frames
+    if not all_frames:
+        raise ValueError("No frames collected. Check folder paths and file contents.")
 
-    master_df = pd.concat(frames, ignore_index=True)
+    master_df = pd.concat(all_frames, ignore_index=True)
 
     # Enforce column order defined by the contract.
     master_df = master_df[CANONICAL_COLUMNS]
 
-    print(f"\nMaster DataFrame: {len(master_df)} total rows from {len(frames)} files.")
+    total_bank = sum(len(f) for f in bank_card_frames)
+    total_ynab = sum(len(f) for f in ynab_frames)
+    print(f"\nMaster DataFrame: {len(master_df)} rows total ({total_bank} bank/card + {total_ynab} YNAB).")
     return master_df
 
 
