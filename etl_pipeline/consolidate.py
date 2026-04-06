@@ -216,9 +216,23 @@ def build_master_df(
     for col in ("Inflow", "Outflow"):
         master_df[col] = pd.to_numeric(master_df[col], errors="coerce").fillna(0.0).round(2)
 
+    # Drop duplicate rows from overlapping statement periods.
+    # Two rows are considered the same transaction when source_type, Account,
+    # Date, Inflow, and Outflow are all identical.  Keep the first occurrence
+    # (earliest file loaded).  This does not catch transactions that changed
+    # state (e.g. pending → cleared with a slightly different amount) — those
+    # are treated as distinct rows intentionally.
+    rows_before = len(master_df)
+    master_df = master_df.drop_duplicates(
+        subset=["source_type", "Account", "Date", "Inflow", "Outflow"],
+        keep="first",
+    ).reset_index(drop=True)
+    dropped = rows_before - len(master_df)
+
     total_bank = sum(len(f) for f in bank_card_frames)
     total_ynab = sum(len(f) for f in ynab_frames)
-    print(f"\nMaster DataFrame: {len(master_df)} rows total ({total_bank} bank/card + {total_ynab} YNAB).")
+    dup_note = f", {dropped} duplicates dropped" if dropped else ""
+    print(f"\nMaster DataFrame: {len(master_df)} rows total ({total_bank} bank/card + {total_ynab} YNAB{dup_note}).")
     return master_df
 
 

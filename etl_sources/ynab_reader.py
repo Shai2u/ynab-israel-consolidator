@@ -9,9 +9,10 @@ from pathlib import Path
 import pandas as pd
 
 from etl_sources.ynab_constants import (
+    YNAB_AMOUNT_CURRENCY_SUFFIX,
     YNAB_FILENAME_TO_OWNERSHIP,
     YNAB_REGISTER_KEEP_COLUMNS,
-    YNAB_AMOUNT_CURRENCY_SUFFIX,
+    YNAB_TO_CANONICAL_ACCOUNT_MAP,
 )
 
 
@@ -51,6 +52,9 @@ def load_ynab_tables(folder: str | Path) -> list[pd.DataFrame]:
         ownership = _resolve_ownership_from_filename(file_path.name)
         df["Ownership"] = ownership
         df["__source_file"] = file_path.name
+        df["Account"] = df["Account"].map(
+            lambda name: YNAB_TO_CANONICAL_ACCOUNT_MAP.get(name, name)
+        )
         frames.append(df)
 
     return frames

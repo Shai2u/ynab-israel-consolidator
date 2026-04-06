@@ -21,3 +21,23 @@ YNAB_FILENAME_TO_OWNERSHIP: list[tuple[str, str]] = [
     ("Mizrahi Nirit and Shai", OWNERSHIP_SHAI_NIRIT_JOINT),
     ("Shai", OWNERSHIP_SHAI_PRIVATE),
 ]
+
+# Maps YNAB account names to canonical bank/card account names used in SOURCE_REGISTRY.
+# Only accounts that have a corresponding source file need an entry here.
+# YNAB-only accounts (tracking, pension, savings) are intentionally omitted —
+# they will never match a bank/card row and that is expected.
+YNAB_TO_CANONICAL_ACCOUNT_MAP: dict[str, str] = {
+    # Banks
+    "Poalim":                  "Bank Hapoalim",
+    "Leumi":                   "Bank Leumi",
+    # Isracard
+    "Isracard Top":            "Isracard 4054",
+    # Visa Cal / Hitechzone
+    "Hitechzone Cal 4779":     "Mastercard_4779_private",
+    "Hitechzone CAL 7353":     "Mastercard_7353_private",
+    # Max
+    "Visa Max":                "Max Uniq",
+    # Already matching — listed here for documentation only.
+    # "Mizrachi":              "Mizrachi",
+    # "Max Uniq":              "Max Uniq",
+}
