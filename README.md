@@ -99,9 +99,13 @@ Steps are ordered by dependency. All matching and scoring steps are fully determ
 - Filter the consolidated DataFrame by Date range and/or Account.
 - Output a filtered slice usable for reconciliation or review.
 
-### Step 3 — Input Selection (CLI)
-- Prompt-based input: choose which source folders to include in a given run.
-- Support both interactive prompt and argument-based invocation.
+### Step 3 — Source Registration & Input Selection
+Replace hardcoded folder paths and account names in `consolidate.py` with a proper registration flow:
+- **Initial registration**: declare each source account (name, type, folder path, ownership) once via a prompt, notebook cell, or config file — no code editing required.
+- Registered sources are stored in a lightweight config (JSON or SQLite table) and reused across runs.
+- Input selection: choose which registered sources to include in a given run (all, by ownership, by account type).
+- This registration layer is the same concept that later becomes the "Add source" screen in the Django UI (Step 5).
+- Progression: notebook prompt → CLI flag → Django settings page.
 
 ### Step 4 — Auto-detect Source from Input
 - Infer source account/format from file signature (header row pattern, filename pattern).
@@ -115,10 +119,21 @@ Steps are ordered by dependency. All matching and scoring steps are fully determ
 **Storage design (cost-first):**
 - User uploads are stored in a small ephemeral area (target: ≤ 100 MB per user session).
 - Raw uploaded files are temporary — auto-deleted after processing (TTL window TBD ❓).
-- **Processed output** (normalized canonical rows) may be persisted in a lightweight SQLite database instead of keeping the raw files around. SQLite is free, file-based, and well-supported by Django — no separate DB server needed.
+- **Processed output** (normalized canonical rows) persisted in a database — no need to keep raw files around.
 - No long-term raw file storage on the server — the source of truth stays with the user's local export files.
 - Goal: keep hosting free or near-free (e.g. Railway, Fly.io, Render free tier).
-- SQLite also naturally supports future persistent features: error logs, quality scores, match history (Steps 7–9) — all in one small file with a row/size limit to cap growth.
+
+**Database options — SQLite vs DuckDB:**
+
+| | SQLite | DuckDB |
+|---|---|---|
+| **Best for** | Transactional reads/writes, Django ORM, source registration | Analytical queries, aggregations, large DataFrames |
+| **Django support** | Native (default Django DB) | Not native, requires custom adapter |
+| **File-based** | Yes (single `.db` file) | Yes (single `.duckdb` file) |
+| **Speed on analytics** | Slower on large GROUP BY / aggregations | Much faster — columnar engine |
+| **Likely choice** | Steps 3, 5 (registration, Django models) | Steps 7–9 (quality scores, error logs, match history) |
+
+Likely approach: **SQLite for the Django app layer** (source registry, user settings, session state) + **DuckDB or plain pandas** for the analytical pipeline (matching, scoring, reporting). Both are file-based, free, and require no server.
 
 ### Step 6 — Auto-match & Fingerprinting
 - Generate a deterministic fingerprint per transaction (date + amount + payee hash).
