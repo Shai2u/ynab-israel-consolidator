@@ -25,7 +25,7 @@ from __future__ import annotations
 import pathlib
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Callable
+from etl_pipeline.adapter import SourceLoader, SourceNormalizer
 
 import pandas as pd
 
@@ -55,8 +55,8 @@ class SourceConfig:
 
     name: str
     folder: str
-    loader: Callable
-    normalizer: Callable
+    loader: SourceLoader
+    normalizer: SourceNormalizer
 
 
 YNAB_FOLDER = r"C:\Users\shai\Documents\personal\personal_projects\ynab-israel-consolidator\private_data\incoming\ynab"
