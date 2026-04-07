@@ -123,17 +123,16 @@ Replace hardcoded folder paths and account names in `consolidate.py` with a prop
 - No long-term raw file storage on the server — the source of truth stays with the user's local export files.
 - Goal: keep hosting free or near-free (e.g. Railway, Fly.io, Render free tier).
 
-**Database options — SQLite vs DuckDB:**
+**Storage progression (add complexity only when needed):**
 
-| | SQLite | DuckDB |
+| Stage | Storage | When |
 |---|---|---|
-| **Best for** | Transactional reads/writes, Django ORM, source registration | Analytical queries, aggregations, large DataFrames |
-| **Django support** | Native (default Django DB) | Not native, requires custom adapter |
-| **File-based** | Yes (single `.db` file) | Yes (single `.duckdb` file) |
-| **Speed on analytics** | Slower on large GROUP BY / aggregations | Much faster — columnar engine |
-| **Likely choice** | Steps 3, 5 (registration, Django models) | Steps 7–9 (quality scores, error logs, match history) |
+| **Now** | pandas in memory + timestamped CSV export | ✅ Already working. Zero infrastructure. Each run produces an audit file. |
+| **Steps 7–9** | SQLite (single `.db` file) | When you need history between runs: error logs, monthly scores, match history accumulate across months. |
+| **Django (Step 5)** | SQLite via Django ORM | Same file, now with a web UI on top. Django uses SQLite by default — no change needed. |
+| **If data grows large** | PostgreSQL or DuckDB | Unlikely for personal finance. Add only if you hit a real performance wall. |
 
-Likely approach: **SQLite for the Django app layer** (source registry, user settings, session state) + **DuckDB or plain pandas** for the analytical pipeline (matching, scoring, reporting). Both are file-based, free, and require no server.
+The CSV export already acts as a natural audit trail — every run produces a new timestamped file so you can always compare past runs. SQLite adds persistence for data that needs to *accumulate* over time (scores, logs), not replace the CSV layer.
 
 ### Step 6 — Auto-match & Fingerprinting
 - Generate a deterministic fingerprint per transaction (date + amount + payee hash).
