@@ -36,7 +36,7 @@ import pandas as pd
 from etl_common.file_loader import LoadedTable
 
 
-@runtime_checkable
+
 class SourceLoader(Protocol):
     """A callable that reads raw export files from a folder.
 
