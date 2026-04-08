@@ -29,6 +29,7 @@ from etl_pipeline.adapter import SourceLoader, SourceNormalizer
 
 import pandas as pd
 
+from etl_pipeline.config_loader import load_source_paths
 from etl_pipeline.schema import CANONICAL_COLUMNS, SOURCE_TYPE_BANK_CARD, SOURCE_TYPE_YNAB, validate_source_df
 from etl_sources.ynab_reader import load_ynab_tables
 from etl_sources.isracard_reader import load_isracard_tables
@@ -59,42 +60,44 @@ class SourceConfig:
     normalizer: SourceNormalizer
 
 
-YNAB_FOLDER = r"C:\Users\shai\Documents\personal\personal_projects\ynab-israel-consolidator\private_data\incoming\ynab"
+_paths = load_source_paths()
+
+YNAB_FOLDER: str = _paths.ynab_folder
 
 SOURCE_REGISTRY: list[SourceConfig] = [
     SourceConfig(
         name="Mizrachi",
-        folder=r"C:\Users\shai\Documents\personal\personal_projects\ynab-israel-consolidator\private_data\incoming\bank_mizrachi",
+        folder=_paths.sources["Mizrachi"],
         loader=load_mizrachi_tables,
         normalizer=normalize_mizrachi_table,
     ),
     SourceConfig(
         name="Bank Leumi",
-        folder=r"C:\Users\shai\Documents\personal\personal_projects\ynab-israel-consolidator\private_data\incoming\bank_leumi",
+        folder=_paths.sources["Bank Leumi"],
         loader=load_leumi_tables,
         normalizer=normalize_leumi_table,
     ),
     SourceConfig(
         name="Bank Hapoalim",
-        folder=r"C:\Users\shai\Documents\personal\personal_projects\ynab-israel-consolidator\private_data\incoming\bank_hapoalim",
+        folder=_paths.sources["Bank Hapoalim"],
         loader=load_hapoalim_tables,
         normalizer=normalize_hapoalim_table,
     ),
     SourceConfig(
         name="Max Uniq",
-        folder=r"C:\Users\shai\Documents\personal\personal_projects\ynab-israel-consolidator\private_data\incoming\visa_max",
+        folder=_paths.sources["Max Uniq"],
         loader=load_max_uniq_tables,
         normalizer=normalize_max_uniq_table,
     ),
     SourceConfig(
         name="Visa Cal",
-        folder=r"C:\Users\shai\Documents\personal\personal_projects\ynab-israel-consolidator\private_data\incoming\visa_cal",
+        folder=_paths.sources["Visa Cal"],
         loader=load_visa_cal_tables,
         normalizer=normalize_visa_cal_table,
     ),
     SourceConfig(
         name="Isracard",
-        folder=r"C:\Users\shai\Documents\personal\personal_projects\ynab-israel-consolidator\private_data\incoming\isracard",
+        folder=_paths.sources["Isracard"],
         loader=load_isracard_tables,
         normalizer=normalize_isracard_table,
     ),
