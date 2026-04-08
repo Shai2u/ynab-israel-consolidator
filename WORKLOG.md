@@ -106,5 +106,7 @@ Session notes for cross-machine and cross-editor continuity.
   - Need a consolidation design pass to convert prototypes into standardized script/class structure.
   - Need handling strategy for future semi-personalized and format-drift statement variants.
 - Next session tasks:
-  - Define minimal adapter interface for source pipelines (while preserving per-source customization points).
-  - Draft boilerplate template for adding future bank/card formats with low friction.
+  - ✅ Define minimal adapter interface for source pipelines (etl_pipeline/adapter.py — SourceLoader + SourceNormalizer Protocols).
+  - ✅ Draft boilerplate template for adding future bank/card formats (etl_prototypes/_new_source_template.py).
+  - Investigate "Credit Card Mizrachi Nirit" — no entry in ACCOUNT_REGISTRY.md; confirmed not yet a known source.
+  - Step 3: replace hardcoded folder paths in consolidate.py with a config file or notebook-driven registration.

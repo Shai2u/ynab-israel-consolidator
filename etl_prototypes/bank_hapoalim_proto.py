@@ -24,13 +24,11 @@ def main(path_to_folder: str, dates_range: tuple[str, str] | None = None) -> Non
     for table in loaded_tables:
         print(f"\nFile: {table.path.name} ({table.extension})")
         df_pending = table.dataframe
-        print(df_pending.head())
 
     if dates_range:
         print(f"Requested date range: {dates_range[0]} -> {dates_range[1]}")
 
     df_pending = normalize_hapoalim_table(df_pending, dates_range=dates_range)
-    print(df_pending.head())
     return df_pending
 
 
@@ -50,7 +48,6 @@ def normalize_hapoalim_table(
 
 def memo_hapoalim_table(df_pending: pd.DataFrame) -> pd.DataFrame:
     """Memo the Hapoalim table."""
-    print(df_pending.head())
     for col in ['Details', 'To Whom 2', 'From Whom']:
         if col in df_pending.columns:
             df_pending[col] = df_pending[col].apply(lambda p: str(p).replace('nan', ''))
