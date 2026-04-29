@@ -1,0 +1,19 @@
+{
+  "window.titleBarStyle": "custom",
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#dce5f5",
+    "titleBar.activeForeground": "#3f3512",
+    "titleBar.inactiveBackground": "#eaf0f8",
+    "titleBar.inactiveForeground": "#6f653f",
+    "statusBar.background": "#b8c5f2",
+    "statusBar.foreground": "#3f3512",
+    "activityBar.background": "#d5e3f7",
+    "activityBar.foreground": "#000000",
+    "sideBar.foreground": "#000000",
+    "sideBar.background": "#fffdf7",
+    "editorGroupHeader.tabsBackground": "#e8ecff",
+    "tab.activeBackground": "#fffdf7",
+    "tab.inactiveBackground": "#e1e5f8",
+    "panel.background": "#fffdf7"
+  }
+}
