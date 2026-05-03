@@ -1,12 +1,12 @@
 {
-  "_comment": "Copy this file to private_data/sources_config.json and fill in your local paths.",
-  "ynab_folder": "C:\\path\\to\\private_data\\incoming\\ynab",
+  "_comment": "Copy this file to private_data/sources_config.json. Paths are relative to the project root; forward slashes work on macOS, Linux, and Windows.",
+  "ynab_folder": "private_data/incoming/ynab",
   "sources": {
-    "Mizrachi":      "C:\\path\\to\\private_data\\incoming\\bank_mizrachi",
-    "Bank Leumi":    "C:\\path\\to\\private_data\\incoming\\bank_leumi",
-    "Bank Hapoalim": "C:\\path\\to\\private_data\\incoming\\bank_hapoalim",
-    "Max Uniq":      "C:\\path\\to\\private_data\\incoming\\visa_max",
-    "Visa Cal":      "C:\\path\\to\\private_data\\incoming\\visa_cal",
-    "Isracard":      "C:\\path\\to\\private_data\\incoming\\isracard"
+    "Mizrachi":      "private_data/incoming/mizrachi_joint",
+    "Bank Leumi":    "private_data/incoming/bank_leumi_private_shai",
+    "Bank Hapoalim": "private_data/incoming/bank_hapoalim_private_shai",
+    "Max Uniq":      "private_data/incoming/max_uniq_joint",
+    "Visa Cal":      "private_data/incoming/mastercard_4779_private",
+    "Isracard":      "private_data/incoming/isracard_4054_joint"
   }
 }
