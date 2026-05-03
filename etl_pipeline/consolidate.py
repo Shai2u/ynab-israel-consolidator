@@ -286,6 +286,6 @@ def export_master_csv(
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    dates_range = ("01/01/2026", "01/03/2026")
+    dates_range = ("01/03/2026", "01/06/2026")
     master_df = build_master_df(dates_range=dates_range)
     export_master_csv(master_df)
