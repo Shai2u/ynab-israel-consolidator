@@ -2,7 +2,8 @@
 
 The config file lives in ``private_data/sources_config.json`` (gitignored).
 Copy ``sources_config.example.json`` from the project root to create it,
-then fill in your local paths.
+then fill in your local paths. Relative paths are resolved from the project
+root, so the same config shape works on macOS, Linux, and Windows.
 
 Why a separate config file instead of hardcoded paths?
 - Paths are machine-specific; the code is not.
@@ -62,9 +63,20 @@ def load_source_paths() -> SourcePaths:
         )
 
     return SourcePaths(
-        ynab_folder=raw["ynab_folder"],
-        sources=raw["sources"],
+        ynab_folder=str(_resolve_config_path(raw["ynab_folder"])),
+        sources={
+            source_name: str(_resolve_config_path(folder))
+            for source_name, folder in raw["sources"].items()
+        },
     )
+
+
+def _resolve_config_path(path_value: str) -> pathlib.Path:
+    """Resolve a config path, keeping absolute paths untouched."""
+    path = pathlib.Path(path_value).expanduser()
+    if path.is_absolute():
+        return path
+    return _PROJECT_ROOT / path
 
 
 def get_source_folder(source_name: str) -> str:
