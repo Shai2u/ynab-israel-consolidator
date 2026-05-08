@@ -239,3 +239,7 @@ Store machine-specific values in `.env` (private, untracked), based on `.env.exa
 - `YNAB_CONSOLIDATOR_S3_PREFIX` (optional; defaults to project data prefix)
 
 Do not store transaction content, exported CSV/XLSX data, or long-lived AWS keys in Git-tracked files.
+
+
+### UP AND RUNNING
+python -m etl_pipeline.consolidate
