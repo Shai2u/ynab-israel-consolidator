@@ -117,8 +117,14 @@ SOURCE_REGISTRY: list[SourceConfig] = [
         normalizer=normalize_max_uniq_table,
     ),
     SourceConfig(
-        name="Visa Cal",
-        folder=_paths.sources["Visa Cal"],
+        name="Visa Cal 4779",
+        folder=_paths.sources["Visa Cal 4779"],
+        loader=load_visa_cal_tables,
+        normalizer=normalize_visa_cal_table,
+    ),
+    SourceConfig(
+        name="Visa Cal 7353",
+        folder=_paths.sources["Visa Cal 7353"],
         loader=load_visa_cal_tables,
         normalizer=normalize_visa_cal_table,
     ),

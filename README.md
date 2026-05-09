@@ -240,6 +240,12 @@ Store machine-specific values in `.env` (private, untracked), based on `.env.exa
 
 Do not store transaction content, exported CSV/XLSX data, or long-lived AWS keys in Git-tracked files.
 
+## Source Config Note
+- In `private_data/sources_config.json`, keep Visa Cal as two explicit source keys:
+  - `"Visa Cal 4779": "private_data/incoming/mastercard_4779_private"`
+  - `"Visa Cal 7353": "private_data/incoming/mastercard_7353_private"`
+- This prevents accidentally skipping one account when both exports use the same file name.
+
 
 ### UP AND RUNNING
 python -m etl_pipeline.consolidate
