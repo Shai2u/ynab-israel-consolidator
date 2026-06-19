@@ -368,7 +368,7 @@ def build_master_df(
     # are treated as distinct rows intentionally.
     rows_before = len(master_df)
     master_df = master_df.drop_duplicates(
-        subset=["source_type", "Account", "Date", "Inflow", "Outflow"],
+        subset=["source_type", "Account", "Date", "Inflow", "Outflow", "Memo"],
         keep="first",
     ).reset_index(drop=True)
     dropped = rows_before - len(master_df)
