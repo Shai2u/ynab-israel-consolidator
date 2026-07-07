@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Accounts</title>
+</head>
+<body>
+    <h1>Accounts</h1>
+
+    <h2>Add Account</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save</button>
+    </form>
+
+    <h2>Configured Accounts</h2>
+    {% if accounts %}
+        <table border="1">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Ownership</th>
+                <th>Folder</th>
+                <th>Enabled</th>
+            </tr>
+            {% for account in accounts %}
+            <tr>
+                <td>{{ account.name }}</td>
+                <td>{{ account.get_account_type_display }}</td>
+                <td>{{ account.get_ownership_display }}</td>
+                <td>{{ account.folder_path }}</td>
+                <td>{{ account.enabled }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No accounts yet.</p>
+    {% endif %}
+</body>
+</html>
