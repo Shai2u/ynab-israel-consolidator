@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from accounts import views as account_views
 from identity import views as identity_views
+from consolidation import views as consolidation_views
 from . import views
 
 
@@ -26,4 +27,5 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('accounts/', account_views.account_list, name='account_list'),
     path('identity/', identity_views.identity_edit, name='identity_edit'),
+    path('consolidation/', consolidation_views.consolidation_run, name='consolidation_run'),
 ]
