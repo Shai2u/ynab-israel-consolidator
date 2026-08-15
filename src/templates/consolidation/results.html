@@ -33,6 +33,7 @@
                 <button type="submit" class="btn btn-primary">Load</button>
             </div>
         </form>
+        <button id="export-btn" class="btn btn-success mb-3" style="display:none">Download CSV</button>
         <div id="results-table"></div>
     </div>
 
@@ -64,7 +65,13 @@
             .then(json => {
                 if (json.error) { alert(json.error); return; }
                 table.setData(json.rows);
-            });
+                document.getElementById("export-btn").style.display = "inline-block";
+            })
+            .catch(err => alert("Fetch error: " + err));
+        });
+
+        document.getElementById("export-btn").addEventListener("click", function() {
+            table.download("csv", "results.csv");
         });
     </script>
 </body>

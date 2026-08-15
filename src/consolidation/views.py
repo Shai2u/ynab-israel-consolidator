@@ -69,6 +69,7 @@ def consolidation_results(request):
                     fail_on_error=False,
                 )
                 matched_df = run_cascade_matching(master_df)
+                matched_df = matched_df.fillna('')
                 data = matched_df.to_dict(orient='records')
                 return JsonResponse({'rows': data})
             except Exception as e:
