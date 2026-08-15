@@ -3,7 +3,8 @@ import csv
 from django.shortcuts import render
 from .forms import ConsolidationForm
 from etl_pipeline.consolidate import build_master_df
-from django.http import HttpResponse
+from etl_pipeline.matching import run_cascade_matching
+from django.http import HttpResponse, JsonResponse
 
 def consolidation_run(request):
     result = None
@@ -54,3 +55,22 @@ def consolidation_export(request):
             master_df.to_csv(path_or_buf=response, index=False, encoding='utf-8-sig')
             return response
     return HttpResponse(status=400)
+
+
+def consolidation_results(request):
+    if request.method == 'POST':
+        form = ConsolidationForm(request.POST)
+        if form.is_valid():
+            start = form.cleaned_data['start_date'].strftime('%d/%m/%Y')
+            end = form.cleaned_data['end_date'].strftime('%d/%m/%Y')
+            try:
+                master_df = build_master_df(
+                    dates_range=(start, end),
+                    fail_on_error=False,
+                )
+                matched_df = run_cascade_matching(master_df)
+                data = matched_df.to_dict(orient='records')
+                return JsonResponse({'rows': data})
+            except Exception as e:
+                return JsonResponse({'error': str(e)}, status=500)
+    return render(request, 'consolidation/results.html', {})

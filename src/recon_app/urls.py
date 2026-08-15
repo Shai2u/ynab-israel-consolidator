@@ -29,4 +29,5 @@ urlpatterns = [
     path('identity/', identity_views.identity_edit, name='identity_edit'),
     path('consolidation/', consolidation_views.consolidation_run, name='consolidation_run'),
     path('consolidation/export/', consolidation_views.consolidation_export, name='consolidation_export'),
+    path('consolidation/results/',consolidation_views.consolidation_results, name='consolidation_results'),
 ]
