@@ -28,4 +28,5 @@ urlpatterns = [
     path('accounts/', account_views.account_list, name='account_list'),
     path('identity/', identity_views.identity_edit, name='identity_edit'),
     path('consolidation/', consolidation_views.consolidation_run, name='consolidation_run'),
+    path('consolidation/export/', consolidation_views.consolidation_export, name='consolidation_export'),
 ]
