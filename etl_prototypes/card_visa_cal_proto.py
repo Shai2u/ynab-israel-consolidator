@@ -95,6 +95,7 @@ def normalize_visa_cal_table(
         df=normalized_df,
         source_to_canonical_map=VISA_CAL_SOURCE_TO_CANONICAL_COLUMN_MAP,
     )
+    normalized_df = coalesce_amount_columns(normalized_df)
     normalized_df = derive_inflow_outflow_from_amount(normalized_df)
     normalized_df = memo_visa_cal_table(normalized_df, dict_cols=VISA_CAL_DICT_COLS)
     normalized_df = attach_account_metadata(
@@ -114,6 +115,30 @@ def normalize_ynab_date_column(df: pd.DataFrame) -> pd.DataFrame:
         input_date_format=VISA_CAL_INPUT_DATE_FORMAT,
         output_date_format=YNAB_OUTPUT_DATE_FORMAT,
     )
+
+
+def coalesce_amount_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Merge the billing-cycle export's split amount columns into 'Amount'.
+
+    That export variant has no single amount column: 'Amount_billed' (סכום
+    חיוב) is blank for a transaction still pending, in which case
+    'Amount_transaction' (סכום עסקה) is the only amount available. Prefer
+    the billed amount and fall back to the transaction amount.
+    """
+    if 'Amount' in df.columns:
+        return df
+    has_billed = 'Amount_billed' in df.columns
+    has_transaction = 'Amount_transaction' in df.columns
+    if not has_billed and not has_transaction:
+        return df
+
+    combined_df = df.copy()
+    billed = combined_df.pop('Amount_billed') if has_billed else None
+    transaction = combined_df.pop('Amount_transaction') if has_transaction else None
+    combined_df['Amount'] = billed.fillna(transaction) if has_billed and has_transaction else (
+        billed if has_billed else transaction
+    )
+    return combined_df
 
 
 def derive_inflow_outflow_from_amount(df: pd.DataFrame) -> pd.DataFrame:
