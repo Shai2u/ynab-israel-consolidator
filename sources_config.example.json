@@ -6,7 +6,8 @@
     "Bank Leumi":    "private_data/incoming/bank_leumi_private_shai",
     "Bank Hapoalim": "private_data/incoming/bank_hapoalim_private_shai",
     "Max Uniq":      "private_data/incoming/max_uniq_joint",
-    "Visa Cal":      "private_data/incoming/mastercard_4779_private",
+    "Visa Cal 4779": "private_data/incoming/mastercard_4779_private",
+    "Visa Cal 7353": "private_data/incoming/mastercard_7353_private",
     "Isracard":      "private_data/incoming/isracard_4054_joint"
   }
 }
