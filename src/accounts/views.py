@@ -1,9 +1,18 @@
+import csv
+import hashlib
+import io
 import os
+from django.http import Http404, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Account
 from .forms import AccountForm
+from etl_pipeline.consolidate import SOURCE_REGISTRY
 
 ALLOWED_EXTENSIONS = {'.xlsx', '.xls', '.csv'}
+
+_SOURCE_BY_ACCOUNT_NAME = {source.name: source for source in SOURCE_REGISTRY}
+
+YNAB_CSV_HEADER = ['Date', 'Payee', 'Category', 'Memo', 'Outflow', 'Inflow']
 
 
 def account_list(request):
@@ -19,16 +28,36 @@ def account_list(request):
     return render(request, 'accounts/list.html', {'form': form, 'accounts': accounts})
 
 
+def _sha256_of_file(path, chunk_size=65536):
+    digest = hashlib.sha256()
+    with open(path, 'rb') as f:
+        for chunk in iter(lambda: f.read(chunk_size), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def account_detail(request, pk):
     account = get_object_or_404(Account, pk=pk)
     files = []
     folder_error = None
     if account.folder_path:
         if os.path.isdir(account.folder_path):
-            files = sorted([
+            names = sorted([
                 f for f in os.listdir(account.folder_path)
                 if os.path.splitext(f)[1].lower() in ALLOWED_EXTENSIONS
             ])
+            hash_counts = {}
+            for name in names:
+                path = os.path.join(account.folder_path, name)
+                file_hash = _sha256_of_file(path)
+                files.append({
+                    'name': name,
+                    'size': os.path.getsize(path),
+                    'hash': file_hash,
+                })
+                hash_counts[file_hash] = hash_counts.get(file_hash, 0) + 1
+            for file_info in files:
+                file_info['is_duplicate'] = hash_counts[file_info['hash']] > 1
         else:
             folder_error = f"Folder not found: {account.folder_path}"
     return render(request, 'accounts/detail.html', {
@@ -46,6 +75,78 @@ def account_edit(request, pk):
     else:
         form = AccountForm(instance=account)
     return render(request, 'accounts/edit.html', {'form': form, 'account': account})
+
+
+def _safe_file_path(account, filename):
+    """Resolve ``filename`` inside ``account.folder_path``, guarding against traversal."""
+    safe_name = os.path.basename(filename)
+    full_path = os.path.join(account.folder_path, safe_name)
+    if os.path.dirname(os.path.abspath(full_path)) != os.path.abspath(account.folder_path):
+        raise Http404("Invalid file path.")
+    return safe_name, full_path
+
+
+def account_convert(request, pk, filename):
+    account = get_object_or_404(Account, pk=pk)
+    if not account.folder_path:
+        raise Http404("Account has no folder configured.")
+
+    safe_name, full_path = _safe_file_path(account, filename)
+    if not os.path.isfile(full_path):
+        raise Http404("File not found.")
+
+    source = _SOURCE_BY_ACCOUNT_NAME.get(account.name)
+    if source is None:
+        raise Http404(f"No source reader registered for account '{account.name}'.")
+
+    if request.method == 'POST':
+        dates = request.POST.getlist('date')
+        payees = request.POST.getlist('payee')
+        memos = request.POST.getlist('memo')
+        outflows = request.POST.getlist('outflow')
+        inflows = request.POST.getlist('inflow')
+        categories = request.POST.getlist('category')
+
+        buffer = io.StringIO()
+        writer = csv.writer(buffer)
+        writer.writerow(YNAB_CSV_HEADER)
+        for date, payee, category, memo, outflow, inflow in zip(
+            dates, payees, categories, memos, outflows, inflows
+        ):
+            writer.writerow([date, payee, category, memo, outflow, inflow])
+
+        response = HttpResponse(
+            buffer.getvalue().encode('utf-8-sig'),
+            content_type='text/csv; charset=utf-8-sig',
+        )
+        response['Content-Disposition'] = (
+            f'attachment; filename="{os.path.splitext(safe_name)[0]}_ynab.csv"'
+        )
+        return response
+
+    loaded_tables = source.loader(folder=account.folder_path, recursive=False)
+    table = next((t for t in loaded_tables if t.path.name == safe_name), None)
+    if table is None:
+        raise Http404("File could not be loaded by the source reader.")
+
+    normalized_df = source.normalizer(table.dataframe, dates_range=None)
+    rows = [
+        {
+            'date': row['Date'],
+            'payee': row['Payee'],
+            'memo': row['Memo'],
+            'outflow': row['Outflow'],
+            'inflow': row['Inflow'],
+            'category': '',
+        }
+        for _, row in normalized_df.iterrows()
+    ]
+
+    return render(request, 'accounts/convert.html', {
+        'account': account,
+        'filename': safe_name,
+        'rows': rows,
+    })
 
 
 def account_upload(request, pk):

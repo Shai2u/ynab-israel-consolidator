@@ -6,4 +6,5 @@ urlpatterns = [
     path('<int:pk>/', views.account_detail, name='account_detail'),
     path('<int:pk>/edit/', views.account_edit, name='account_edit'),
     path('<int:pk>/upload/', views.account_upload, name='account_upload'),
+    path('<int:pk>/convert/<path:filename>/', views.account_convert, name='account_convert'),
 ]
