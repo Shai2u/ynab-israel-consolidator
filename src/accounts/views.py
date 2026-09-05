@@ -37,6 +37,19 @@ def _sha256_of_file(path, chunk_size=65536):
     return digest.hexdigest()
 
 
+def _group_tables_by_name(loaded_tables):
+    """Group LoadedTables by filename.
+
+    A single file can yield multiple LoadedTables sharing the same
+    ``path`` (e.g. Max Uniq: one per worksheet), so this must return a
+    list per filename rather than picking just one.
+    """
+    grouped = {}
+    for table in loaded_tables:
+        grouped.setdefault(table.path.name, []).append(table)
+    return grouped
+
+
 def _date_range_of(normalized_df):
     if normalized_df.empty:
         return None
@@ -88,17 +101,26 @@ def account_detail(request, pk):
                     loaded_tables = source.loader(folder=account.folder_path, recursive=False)
                 except Exception:
                     loaded_tables = []
-                tables_by_name = {table.path.name: table for table in loaded_tables}
+                tables_by_name = _group_tables_by_name(loaded_tables)
                 for file_info in files:
-                    table = tables_by_name.get(file_info['name'])
-                    if table is None:
+                    tables = tables_by_name.get(file_info['name'], [])
+                    if not tables:
                         file_info['date_range'] = None
                         continue
-                    try:
-                        normalized_df = source.normalizer(table.dataframe, dates_range=None)
-                        file_info['date_range'] = _date_range_of(normalized_df)
-                    except Exception as exc:
-                        file_info['date_range'] = f"⚠ parse error: {exc}"
+                    normalized_frames = []
+                    last_error = None
+                    for table in tables:
+                        try:
+                            normalized_frames.append(source.normalizer(table.dataframe, dates_range=None))
+                        except Exception as exc:
+                            last_error = exc
+                    if normalized_frames:
+                        combined_df = pd.concat(normalized_frames, ignore_index=True)
+                        file_info['date_range'] = _date_range_of(combined_df)
+                    elif last_error is not None:
+                        file_info['date_range'] = f"⚠ parse error: {last_error}"
+                    else:
+                        file_info['date_range'] = None
             else:
                 for file_info in files:
                     file_info['date_range'] = None
@@ -191,11 +213,19 @@ def account_convert(request, pk, filename):
         return response
 
     loaded_tables = source.loader(folder=account.folder_path, recursive=False)
-    table = next((t for t in loaded_tables if t.path.name == safe_name), None)
-    if table is None:
+    tables = [t for t in loaded_tables if t.path.name == safe_name]
+    if not tables:
         raise Http404("File could not be loaded by the source reader.")
 
-    normalized_df = source.normalizer(table.dataframe, dates_range=None)
+    # A file can hold multiple sheets (e.g. Max Uniq: regular/foreign/immediate-charge
+    # sheets), each yielding its own LoadedTable sharing this filename — normalize
+    # and combine all of them, not just the first.
+    normalized_frames = [source.normalizer(t.dataframe, dates_range=None) for t in tables]
+    normalized_df = (
+        pd.concat(normalized_frames, ignore_index=True)
+        if len(normalized_frames) > 1
+        else normalized_frames[0]
+    )
     rows = [
         {
             'date': row['Date'],
