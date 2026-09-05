@@ -21,3 +21,19 @@ class Account(models.Model):
 
     class Meta:
         ordering = ['account_type', 'name']
+
+
+class FileReview(models.Model):
+    """Marks one file in an account's folder as manually reviewed.
+
+    Keyed on file_hash (not just filename) so that replacing a file's
+    content under the same name invalidates the review automatically.
+    """
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='file_reviews')
+    filename = models.CharField(max_length=255)
+    file_hash = models.CharField(max_length=64)
+    reviewed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('account', 'filename')

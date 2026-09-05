@@ -43,7 +43,7 @@
         {% elif files %}
             <table class="table table-bordered table-sm mb-4">
                 <thead>
-                    <tr><th>#</th><th>Filename</th><th>Size</th><th>SHA-256</th><th>Date Range</th><th></th><th></th></tr>
+                    <tr><th>#</th><th>Filename</th><th>Size</th><th>SHA-256</th><th>Date Range</th><th></th><th>Reviewed</th><th></th></tr>
                 </thead>
                 <tbody>
                     {% for file in files %}
@@ -54,6 +54,19 @@
                         <td><code>{{ file.hash|slice:":12" }}…</code></td>
                         <td>{{ file.date_range|default:"—" }}</td>
                         <td>{% if file.is_duplicate %}<span class="badge bg-warning text-dark">Possible duplicate</span>{% endif %}</td>
+                        <td>
+                            {% if file.review_stale %}
+                                <span class="badge bg-warning text-dark d-block mb-1">Changed since review</span>
+                            {% elif file.reviewed_at %}
+                                <span class="badge bg-success d-block mb-1">✓ {{ file.reviewed_at|date:"d/m/Y H:i" }}</span>
+                            {% endif %}
+                            <form method="post" action="{% url 'account_toggle_review' account.id file.name %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm {% if file.reviewed_at %}btn-outline-secondary{% else %}btn-outline-success{% endif %}">
+                                    {% if file.reviewed_at %}Unmark{% else %}Mark Reviewed{% endif %}
+                                </button>
+                            </form>
+                        </td>
                         <td><a href="{% url 'account_convert' account.id file.name %}" class="btn btn-outline-primary btn-sm">Convert to YNAB</a></td>
                     </tr>
                     {% endfor %}

@@ -5,7 +5,7 @@ import os
 import pandas as pd
 from django.http import Http404, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Account
+from .models import Account, FileReview
 from .forms import AccountForm
 from etl_pipeline.consolidate import SOURCE_REGISTRY
 
@@ -69,6 +69,19 @@ def account_detail(request, pk):
             for file_info in files:
                 file_info['is_duplicate'] = hash_counts[file_info['hash']] > 1
 
+            reviews_by_name = {r.filename: r for r in account.file_reviews.all()}
+            for file_info in files:
+                review = reviews_by_name.get(file_info['name'])
+                if review is None:
+                    file_info['reviewed_at'] = None
+                    file_info['review_stale'] = False
+                elif review.file_hash == file_info['hash']:
+                    file_info['reviewed_at'] = review.reviewed_at
+                    file_info['review_stale'] = False
+                else:
+                    file_info['reviewed_at'] = None
+                    file_info['review_stale'] = True
+
             source = _SOURCE_BY_ACCOUNT_NAME.get(account.name)
             if source is not None:
                 try:
@@ -115,6 +128,28 @@ def _safe_file_path(account, filename):
     if os.path.dirname(os.path.abspath(full_path)) != os.path.abspath(account.folder_path):
         raise Http404("Invalid file path.")
     return safe_name, full_path
+
+
+def account_toggle_review(request, pk, filename):
+    account = get_object_or_404(Account, pk=pk)
+    if not account.folder_path:
+        raise Http404("Account has no folder configured.")
+    if request.method != 'POST':
+        raise Http404("Invalid request method.")
+
+    safe_name, full_path = _safe_file_path(account, filename)
+    if not os.path.isfile(full_path):
+        raise Http404("File not found.")
+
+    current_hash = _sha256_of_file(full_path)
+    review = FileReview.objects.filter(account=account, filename=safe_name).first()
+    if review is not None:
+        review.delete()
+    if review is None or review.file_hash != current_hash:
+        # No prior review, or the file changed since it was last reviewed:
+        # (re-)mark reviewed against the current content, with a fresh timestamp.
+        FileReview.objects.create(account=account, filename=safe_name, file_hash=current_hash)
+    return redirect('account_detail', pk=pk)
 
 
 def account_convert(request, pk, filename):
