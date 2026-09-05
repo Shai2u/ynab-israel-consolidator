@@ -2,6 +2,7 @@ import csv
 import hashlib
 import io
 import os
+import pandas as pd
 from django.http import Http404, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Account
@@ -36,6 +37,15 @@ def _sha256_of_file(path, chunk_size=65536):
     return digest.hexdigest()
 
 
+def _date_range_of(normalized_df):
+    if normalized_df.empty:
+        return None
+    dates = pd.to_datetime(normalized_df['Date'], dayfirst=True, errors='coerce').dropna()
+    if dates.empty:
+        return None
+    return f"{dates.min().strftime('%d/%m/%Y')} – {dates.max().strftime('%d/%m/%Y')}"
+
+
 def account_detail(request, pk):
     account = get_object_or_404(Account, pk=pk)
     files = []
@@ -58,6 +68,27 @@ def account_detail(request, pk):
                 hash_counts[file_hash] = hash_counts.get(file_hash, 0) + 1
             for file_info in files:
                 file_info['is_duplicate'] = hash_counts[file_info['hash']] > 1
+
+            source = _SOURCE_BY_ACCOUNT_NAME.get(account.name)
+            if source is not None:
+                try:
+                    loaded_tables = source.loader(folder=account.folder_path, recursive=False)
+                except Exception:
+                    loaded_tables = []
+                tables_by_name = {table.path.name: table for table in loaded_tables}
+                for file_info in files:
+                    table = tables_by_name.get(file_info['name'])
+                    if table is None:
+                        file_info['date_range'] = None
+                        continue
+                    try:
+                        normalized_df = source.normalizer(table.dataframe, dates_range=None)
+                        file_info['date_range'] = _date_range_of(normalized_df)
+                    except Exception as exc:
+                        file_info['date_range'] = f"⚠ parse error: {exc}"
+            else:
+                for file_info in files:
+                    file_info['date_range'] = None
         else:
             folder_error = f"Folder not found: {account.folder_path}"
     return render(request, 'accounts/detail.html', {

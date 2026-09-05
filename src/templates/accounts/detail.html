@@ -43,7 +43,7 @@
         {% elif files %}
             <table class="table table-bordered table-sm mb-4">
                 <thead>
-                    <tr><th>#</th><th>Filename</th><th>Size</th><th>SHA-256</th><th></th><th></th></tr>
+                    <tr><th>#</th><th>Filename</th><th>Size</th><th>SHA-256</th><th>Date Range</th><th></th><th></th></tr>
                 </thead>
                 <tbody>
                     {% for file in files %}
@@ -52,6 +52,7 @@
                         <td>{{ file.name }}</td>
                         <td>{{ file.size|filesizeformat }}</td>
                         <td><code>{{ file.hash|slice:":12" }}…</code></td>
+                        <td>{{ file.date_range|default:"—" }}</td>
                         <td>{% if file.is_duplicate %}<span class="badge bg-warning text-dark">Possible duplicate</span>{% endif %}</td>
                         <td><a href="{% url 'account_convert' account.id file.name %}" class="btn btn-outline-primary btn-sm">Convert to YNAB</a></td>
                     </tr>
