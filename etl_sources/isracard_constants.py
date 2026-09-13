@@ -9,7 +9,8 @@ ISRACARD_INPUT_DATE_FORMAT = "%d.%m.%y"
 # Default header row index fallback in Isracard exports.
 ISRACARD_HEADER_DEFAULT_ROW_IDX = 0
 
-# Header signature used to detect the true header row.
+# Header signature used to detect the true header row of the "billed"
+# transactions table (עסקאות למועד חיוב) — the main, finalized-amount table.
 ISRACARD_REQUIRED_HEADERS: set[str] = {
     "תאריך רכישה",
     "שם בית עסק",
@@ -19,6 +20,21 @@ ISRACARD_REQUIRED_HEADERS: set[str] = {
     "מטבע חיוב",
     "פירוט נוסף",
 }
+
+# Some exports additionally include an earlier "not yet recorded" table
+# (עסקאות שטרם נקלטו) for transactions with no billed amount yet — it has
+# only these 4 columns, a subset of ISRACARD_REQUIRED_HEADERS above.
+ISRACARD_PENDING_REQUIRED_HEADERS: set[str] = {
+    "תאריך רכישה",
+    "שם בית עסק",
+    "סכום עסקה",
+    "מטבע עסקה",
+}
+
+# Section title cells (first column) marking each table's start, when both
+# are present in one export.
+ISRACARD_PENDING_SECTION_TITLE = "עסקאות שטרם נקלטו"
+ISRACARD_BILLED_SECTION_TITLE = "עסקאות למועד חיוב"
 
 # Source header -> canonical mapping.
 ISRACARD_SOURCE_TO_CANONICAL_COLUMN_MAP: dict[str, str] = {
