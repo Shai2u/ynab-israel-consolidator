@@ -362,13 +362,18 @@ def build_master_df(
 
     # Drop duplicate rows from overlapping statement periods.
     # Two rows are considered the same transaction when source_type, Account,
-    # Date, Inflow, and Outflow are all identical.  Keep the first occurrence
-    # (earliest file loaded).  This does not catch transactions that changed
-    # state (e.g. pending → cleared with a slightly different amount) — those
-    # are treated as distinct rows intentionally.
+    # Date, Payee, Inflow, and Outflow are all identical.  Keep the first
+    # occurrence (earliest file loaded).  Payee must be part of the key:
+    # without it, two different merchants charging the same amount on the
+    # same day (with no distinguishing Memo text) collide and one gets
+    # silently dropped — this did happen in practice (e.g. two unrelated
+    # ₪30 Isracard charges on the same day). This does not catch
+    # transactions that changed state (e.g. pending → cleared with a
+    # slightly different amount) — those are treated as distinct rows
+    # intentionally.
     rows_before = len(master_df)
     master_df = master_df.drop_duplicates(
-        subset=["source_type", "Account", "Date", "Inflow", "Outflow", "Memo"],
+        subset=["source_type", "Account", "Date", "Payee", "Inflow", "Outflow", "Memo"],
         keep="first",
     ).reset_index(drop=True)
     dropped = rows_before - len(master_df)
